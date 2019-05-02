@@ -33,7 +33,6 @@ message CloneRepositoriesRequest {
 }
 
 message CloneRepositoriesResponse {
-    int32 code = 1;
     string message = 2;
 }
 
@@ -48,6 +47,5 @@ message DownloadRepositoriesRequest {
 }
 
 message DownloadRepositoriesResponse {
-    int32 code = 1;
     string message = 2;
 }

@@ -92,10 +92,6 @@
     "gitcrowCloneRepositoriesResponse": {
       "type": "object",
       "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
         "message": {
           "type": "string"
         }
@@ -127,10 +123,6 @@
     "gitcrowDownloadRepositoriesResponse": {
       "type": "object",
       "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
         "message": {
           "type": "string"
         }
