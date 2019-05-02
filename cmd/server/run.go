@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-
 	"github.com/izumin5210/grapi/pkg/grapiserver"
+	"github.com/taxio/gitcrow/app/server"
 )
 
 func run() error {
@@ -13,7 +13,7 @@ func run() error {
 	s := grapiserver.New(
 		grapiserver.WithDefaultLogger(),
 		grapiserver.WithServers(
-		// TODO
+			server.NewTodoServiceServer(),
 		),
 	)
 	return s.ServeContext(ctx)

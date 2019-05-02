@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package taxio.gitcrow;
+
+option go_package = "github.com/taxio/gitcrow/api;api_pb";
+
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service TodoService {
+  rpc ListTodos (ListTodosRequest) returns (ListTodosResponse) {
+    option (google.api.http) = {
+      get: "/todos"
+    };
+  }
+  rpc GetTodo (GetTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      get: "/todos/{todo_id}"
+    };
+  }
+  rpc CreateTodo (CreateTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      post: "/todos"
+      body: "todo"
+    };
+  }
+  rpc UpdateTodo (UpdateTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      patch: "/todos/{todo.todo_id}"
+      body: "todo"
+    };
+  }
+  rpc DeleteTodo (DeleteTodoRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/todos/{todo_id}"
+    };
+  }
+}
+
+message Todo {
+  string todo_id = 1;
+  string title = 2;
+  bool done = 3;
+}
+
+message ListTodosRequest {
+}
+
+message ListTodosResponse {
+  repeated Todo todos = 1;
+}
+
+message GetTodoRequest {
+  string todo_id = 1;
+}
+
+message CreateTodoRequest {
+  Todo todo = 1;
+}
+
+message UpdateTodoRequest {
+  Todo todo = 1;
+}
+
+message DeleteTodoRequest {
+  string todo_id = 1;
+}
