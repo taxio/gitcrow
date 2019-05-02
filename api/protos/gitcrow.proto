@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package taxio.gitcrow;
+
+option go_package = "github.com/taxio/gitcrow/api;api_pb";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service GitcrowService {
+    rpc CloneRepositories (CloneRepositoriesRequest) returns (CloneRepositoriesResponse) {
+        option (google.api.http) = {
+            post: "/clone"
+        };
+    }
+
+    rpc DownloadRepositories (DownloadRepositoriesRequest) returns (DownloadRepositoriesResponse) {
+        option (google.api.http) = {
+            post: "/download"
+        };
+    }
+}
+
+message CloneRepositoriesRequest {
+    string username = 1;
+    string access_token = 2;
+    string save_dir = 3;
+
+    string owner = 4;
+    string repo = 5;
+}
+
+message CloneRepositoriesResponse {
+    int32 code = 1;
+    string message = 2;
+}
+
+message DownloadRepositoriesRequest {
+    string username = 1;
+    string access_token = 2;
+    string save_dir = 3;
+
+    string owner = 4;
+    string repo = 5;
+    string tag = 6;
+}
+
+message DownloadRepositoriesResponse {
+    int32 code = 1;
+    string message = 2;
+}
