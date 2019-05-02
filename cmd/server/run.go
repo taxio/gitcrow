@@ -13,7 +13,7 @@ func run() error {
 	s := grapiserver.New(
 		grapiserver.WithDefaultLogger(),
 		grapiserver.WithServers(
-			server.NewTodoServiceServer(),
+			server.NewGitcrowServiceServer(),
 		),
 	)
 	return s.ServeContext(ctx)
