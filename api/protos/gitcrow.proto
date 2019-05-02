@@ -11,12 +11,14 @@ service GitcrowService {
     rpc CloneRepositories (CloneRepositoriesRequest) returns (CloneRepositoriesResponse) {
         option (google.api.http) = {
             post: "/clone"
+            body: "*"
         };
     }
 
     rpc DownloadRepositories (DownloadRepositoriesRequest) returns (DownloadRepositoriesResponse) {
         option (google.api.http) = {
             post: "/download"
+            body: "*"
         };
     }
 }

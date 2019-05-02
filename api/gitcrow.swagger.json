@@ -26,6 +26,16 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitcrowCloneRepositoriesRequest"
+            }
+          }
+        ],
         "tags": [
           "GitcrowService"
         ]
@@ -42,6 +52,16 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitcrowDownloadRepositoriesRequest"
+            }
+          }
+        ],
         "tags": [
           "GitcrowService"
         ]
@@ -49,6 +69,26 @@
     }
   },
   "definitions": {
+    "gitcrowCloneRepositoriesRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "access_token": {
+          "type": "string"
+        },
+        "save_dir": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        }
+      }
+    },
     "gitcrowCloneRepositoriesResponse": {
       "type": "object",
       "properties": {
@@ -57,6 +97,29 @@
           "format": "int32"
         },
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "gitcrowDownloadRepositoriesRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "access_token": {
+          "type": "string"
+        },
+        "save_dir": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "tag": {
           "type": "string"
         }
       }
