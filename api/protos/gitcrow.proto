@@ -6,6 +6,7 @@ option go_package = "github.com/taxio/gitcrow/api;api_pb";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 service GitcrowService {
     rpc CloneRepositories (CloneRepositoriesRequest) returns (CloneRepositoriesResponse) {
@@ -23,13 +24,18 @@ service GitcrowService {
     }
 }
 
+message Repository {
+    string owner = 1;
+    string repo = 2;
+    google.protobuf.StringValue tag = 3;
+}
+
 message CloneRepositoriesRequest {
     string username = 1;
     string access_token = 2;
     string save_dir = 3;
 
-    string owner = 4;
-    string repo = 5;
+    repeated Repository repos = 4;
 }
 
 message CloneRepositoriesResponse {
@@ -41,9 +47,7 @@ message DownloadRepositoriesRequest {
     string access_token = 2;
     string save_dir = 3;
 
-    string owner = 4;
-    string repo = 5;
-    string tag = 6;
+    repeated Repository repos = 4;
 }
 
 message DownloadRepositoriesResponse {

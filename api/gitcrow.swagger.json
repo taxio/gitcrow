@@ -81,11 +81,11 @@
         "save_dir": {
           "type": "string"
         },
-        "owner": {
-          "type": "string"
-        },
-        "repo": {
-          "type": "string"
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitcrowRepository"
+          }
         }
       }
     },
@@ -109,14 +109,11 @@
         "save_dir": {
           "type": "string"
         },
-        "owner": {
-          "type": "string"
-        },
-        "repo": {
-          "type": "string"
-        },
-        "tag": {
-          "type": "string"
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitcrowRepository"
+          }
         }
       }
     },
@@ -124,6 +121,20 @@
       "type": "object",
       "properties": {
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "gitcrowRepository": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "tag": {
           "type": "string"
         }
       }
