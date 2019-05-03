@@ -1,9 +1,8 @@
 package main
 
 import (
-	"os"
-
 	"google.golang.org/grpc/grpclog"
+	"os"
 )
 
 func main() {
