@@ -17,10 +17,10 @@ func NewCacheStore(cacheDir string) repository.CacheStore {
 	return &cacheStoreImpl{cacheDir: cacheDir}
 }
 
-func (s *cacheStoreImpl) Exists(ctx context.Context, dir string, repo model.GitRepo) (bool, error) {
+func (s *cacheStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool, error) {
 	return false, nil
 }
 
-func (s *cacheStoreImpl) Save(ctx context.Context, dir, filename string, data io.ReadCloser) error {
+func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data io.ReadCloser) error {
 	return nil
 }
