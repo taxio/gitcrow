@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/github"
+	"github.com/k0kubun/pp"
+	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/domain/model"
+	"github.com/taxio/gitcrow/domain/repository"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
+	"io"
 )
 
 var ErrAlreadyAcceptedDownloadRequest = xerrors.New("the user already requested download")
@@ -17,12 +21,20 @@ type DownloadService interface {
 
 type downloadServiceImpl struct {
 	requestUsers []string // リクエストを投げているuser list
-	// infra instance
+
+	cacheStore  repository.CacheStore
+	recordStore repository.RecordStore
+	reportStore repository.ReportStore
+	userStore   repository.UserStore
 }
 
-func NewDownloadService() DownloadService {
+func NewDownloadService(component di.AppComponent) DownloadService {
 	return &downloadServiceImpl{
 		requestUsers: []string{},
+		cacheStore:   component.CacheStore(),
+		recordStore:  component.RecordStore(),
+		reportStore:  component.ReportStore(),
+		userStore:    component.UserStore(),
 	}
 }
 
@@ -53,22 +65,60 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 
 	// TODO: validate user save directory
 
-	go func() {
+	go func(ctx context.Context, client *github.Client, username, saveDir string, repos []*model.GitRepo) {
+		pp.Println(repos)
 		for _, repo := range repos {
-			fmt.Println(repo)
-			// TODO: Cache存在確認
-			// TODO: API経由でダウンロード
+			pp.Println(repo)
+			// check existence in cache
+			exists, err := s.cacheStore.Exists(ctx, repo)
+			if err != nil {
+				// TODO: report
+				fmt.Println(err)
+				continue
+			}
+			if exists {
+				continue
+			}
 
-			// TODO: DBに記録
-			// TODO: Cacheに保存
+			// download zip data
+			data, err := s.downloadRepository(ctx, client, repo)
+			if err != nil {
+				// TODO: report
+				fmt.Println(err)
+				continue
+			}
+			filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
+
+			// record to DB
+			err = s.recordStore.Insert(ctx, repo)
+			if err != nil {
+				// TODO: log
+				fmt.Println(err)
+			}
+
+			// save to cache dir
+			err = s.cacheStore.Save(ctx, filename, data)
+			if err != nil {
+				// TODO: log
+				fmt.Println(err)
+			}
+
 			// TODO: saveDirに保存
+			err = s.userStore.Save(ctx, filename, data)
+			if err != nil {
+				// TODO: report
+				fmt.Println(err)
+			}
 		}
-	}()
 
-	err = s.removeRequestUser(ctx, username)
-	if err != nil {
-		return err
-	}
+		// TODO: ユーザーに通知 & report作成
+
+		err = s.removeRequestUser(ctx, username)
+		if err != nil {
+			// TODO: log
+			fmt.Println(err)
+		}
+	}(ctx, client, username, saveDir, repos)
 
 	return nil
 }
@@ -94,4 +144,29 @@ func (s *downloadServiceImpl) removeRequestUser(ctx context.Context, username st
 		}
 	}
 	return nil
+}
+
+func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *github.Client, repo *model.GitRepo) (io.ReadCloser, error) {
+	// get tag list
+	tags, _, err := client.Repositories.ListTags(ctx, repo.Owner, repo.Repo, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// check tag existence
+	var zipUrl string
+	for _, tag := range tags {
+		if *tag.Name == repo.Tag {
+			zipUrl = *tag.ZipballURL
+		}
+	}
+	if len(zipUrl) == 0 {
+		return nil, fmt.Errorf("tag not found")
+	}
+
+	fmt.Println(zipUrl)
+
+	// download zip
+
+	return nil, nil
 }
