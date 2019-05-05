@@ -1,13 +1,16 @@
 package infra
 
-import "context"
+import (
+	"context"
+	"github.com/taxio/gitcrow/domain/repository"
+)
 
 type reportStoreImpl struct {
 	WebHookURL string
 	SaveDir    string
 }
 
-func NewReportStore(webHookURL, saveDir string) *reportStoreImpl {
+func NewReportStore(webHookURL, saveDir string) repository.ReportStore {
 	return &reportStoreImpl{
 		WebHookURL: webHookURL,
 		SaveDir:    saveDir,

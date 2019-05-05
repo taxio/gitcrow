@@ -3,14 +3,16 @@ package infra
 import (
 	"context"
 	"database/sql"
+
 	"github.com/taxio/gitcrow/domain/model"
+	"github.com/taxio/gitcrow/domain/repository"
 )
 
 type recordStoreImpl struct {
 	db *sql.DB
 }
 
-func NewRecordStore(db *sql.DB) *recordStoreImpl {
+func NewRecordStore(db *sql.DB) repository.RecordStore {
 	return &recordStoreImpl{db: db}
 }
 

@@ -13,7 +13,7 @@ type cloneServiceImpl struct {
 	// infra instance
 }
 
-func NewCloneService() *cloneServiceImpl {
+func NewCloneService() CloneService {
 	return &cloneServiceImpl{}
 }
 

@@ -6,12 +6,10 @@ import (
 	"io"
 )
 
-type userStoreImpl struct {
-	saveDir string
-}
+type userStoreImpl struct {}
 
-func NewUserStore(saveDir string) *userStoreImpl {
-	return &userStoreImpl{saveDir: saveDir}
+func NewUserStore() *userStoreImpl {
+	return &userStoreImpl{}
 }
 
 func (s *userStoreImpl) Save(ctx context.Context, filename string, data io.ReadCloser) error {
