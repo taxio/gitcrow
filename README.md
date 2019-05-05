@@ -16,8 +16,6 @@ TODO: migrate by script
 At the first of migration, you must create database and schema on your db.
 1. login db using `psql`
 1. `create database gitcrow;`
-1. `\c gitcrow`
-1. `create schema gitcrow;`
 
 migration using [golang-migrate/migrate](https://github.com/golang-migrate/migrate).
 ```bash

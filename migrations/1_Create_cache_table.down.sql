@@ -1,1 +1,1 @@
-drop table gitcrow.cached;
+drop table cached;
