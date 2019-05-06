@@ -10,7 +10,8 @@ import (
 	"github.com/taxio/gitcrow/domain/repository"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
-	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 var ErrAlreadyAcceptedDownloadRequest = xerrors.New("the user already requested download")
@@ -146,7 +147,7 @@ func (s *downloadServiceImpl) removeRequestUser(ctx context.Context, username st
 	return nil
 }
 
-func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *github.Client, repo *model.GitRepo) (io.ReadCloser, error) {
+func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *github.Client, repo *model.GitRepo) ([]byte, error) {
 	// get tag list
 	tags, _, err := client.Repositories.ListTags(ctx, repo.Owner, repo.Repo, nil)
 	if err != nil {
@@ -167,6 +168,14 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 	fmt.Println(zipUrl)
 
 	// download zip
+	resp, err := http.Get(zipUrl)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return body, nil
 }
