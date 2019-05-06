@@ -3,12 +3,11 @@ package repository
 import (
 	"context"
 	"github.com/taxio/gitcrow/domain/model"
-	"io"
 )
 
 type CacheStore interface {
 	Exists(ctx context.Context, repo *model.GitRepo) (bool, error)
-	Save(ctx context.Context, filename string, data io.ReadCloser) error
+	Save(ctx context.Context, filename string, data []byte) error
 }
 
 type RecordStore interface {
@@ -18,7 +17,7 @@ type RecordStore interface {
 }
 
 type UserStore interface {
-	Save(ctx context.Context, filename string, data io.ReadCloser) error
+	Save(ctx context.Context, filename string, data []byte) error
 	Clone(ctx context.Context, repo *model.GitRepo) error
 }
 

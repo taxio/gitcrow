@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
-	"io"
 	"sync"
 )
 
@@ -21,6 +20,6 @@ func (s *cacheStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool,
 	return false, nil
 }
 
-func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data io.ReadCloser) error {
+func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data []byte) error {
 	return nil
 }
