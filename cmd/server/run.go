@@ -6,6 +6,7 @@ import (
 	"github.com/taxio/gitcrow/app/config"
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/app/server"
+	"github.com/taxio/gitcrow/domain/service"
 )
 
 func run() error {
@@ -17,15 +18,18 @@ func run() error {
 		return err
 	}
 
-	_, err = di.CreateAppComponent(cfg)
+	appComp, err := di.CreateAppComponent(cfg)
 	if err != nil {
 		return err
 	}
 
+	downloadSvc := service.NewDownloadService(appComp)
+	var cloneSvc service.CloneService  // TODO: impl
+
 	s := grapiserver.New(
 		grapiserver.WithDefaultLogger(),
 		grapiserver.WithServers(
-			server.NewGitcrowServiceServer(),
+			server.NewGitcrowServiceServer(downloadSvc, cloneSvc),
 		),
 	)
 	return s.ServeContext(ctx)

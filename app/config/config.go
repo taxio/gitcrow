@@ -8,6 +8,10 @@ import (
 type Config struct {
 	DatabaseURL     string
 	SlackWebHookURL string
+	CacheDir        string
+
+	// for debug
+	GithubAccessToken string
 }
 
 func Load() (*Config, error) {
@@ -17,8 +21,10 @@ func Load() (*Config, error) {
 	}
 
 	config := &Config{
-		DatabaseURL:     os.Getenv("DATABASE_URL"),
-		SlackWebHookURL: os.Getenv("SLACK_WEBHOOK_URL"),
+		DatabaseURL:       os.Getenv("DATABASE_URL"),
+		SlackWebHookURL:   os.Getenv("SLACK_WEBHOOK_URL"),
+		CacheDir:          os.Getenv("CACHE_DIR"),
+		GithubAccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 	}
 
 	return config, nil

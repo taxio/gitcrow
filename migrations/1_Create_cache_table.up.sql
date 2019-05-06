@@ -1,4 +1,4 @@
-create table gitcrow.cached
+create table cached
 (
 	pk serial
 		constraint cached_pk
