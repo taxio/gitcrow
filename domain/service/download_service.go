@@ -10,6 +10,7 @@ import (
 	"github.com/taxio/gitcrow/domain/repository"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
+	"google.golang.org/grpc/grpclog"
 	"io/ioutil"
 	"net/http"
 )
@@ -100,8 +101,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 			// save to cache dir
 			err = s.cacheStore.Save(ctx, filename, data)
 			if err != nil {
-				// TODO: log
-				fmt.Println(err)
+				grpclog.Errorf("cannot save to cache: %s, %#v", filename, err)
 			}
 
 			// TODO: saveDirに保存
@@ -164,8 +164,6 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 	if len(zipUrl) == 0 {
 		return nil, fmt.Errorf("tag not found")
 	}
-
-	fmt.Println(zipUrl)
 
 	// download zip
 	resp, err := http.Get(zipUrl)
