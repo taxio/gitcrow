@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/github"
-	"github.com/k0kubun/pp"
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
@@ -67,10 +66,10 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 
 	// TODO: validate user save directory
 
-	go func(ctx context.Context, client *github.Client, username, saveDir string, repos []*model.GitRepo) {
-		pp.Println(repos)
+	go func(client *github.Client, username, saveDir string, repos []*model.GitRepo) {
+		grpclog.Infoln("start %s download worker\n", username)
+		ctx := context.Background()
 		for _, repo := range repos {
-			pp.Println(repo)
 			// check existence in cache
 			exists, err := s.cacheStore.Exists(ctx, repo)
 			if err != nil {
@@ -94,14 +93,13 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 			// record to DB
 			err = s.recordStore.Insert(ctx, repo)
 			if err != nil {
-				// TODO: log
-				fmt.Println(err)
+				grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
 			}
 
 			// save to cache dir
 			err = s.cacheStore.Save(ctx, filename, data)
 			if err != nil {
-				grpclog.Errorf("cannot save to cache: %s, %#v", filename, err)
+				grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
 			}
 
 			// TODO: saveDirに保存
@@ -110,16 +108,17 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 				// TODO: report
 				fmt.Println(err)
 			}
+
+			grpclog.Infof("finish %s download worker\n", username)
 		}
 
 		// TODO: ユーザーに通知 & report作成
 
 		err = s.removeRequestUser(ctx, username)
 		if err != nil {
-			// TODO: log
-			fmt.Println(err)
+			grpclog.Errorf("remove request user failed: #s, %#v\n", username, err)
 		}
-	}(ctx, client, username, saveDir, repos)
+	}(client, username, saveDir, repos)
 
 	return nil
 }
