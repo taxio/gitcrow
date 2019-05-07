@@ -6,9 +6,14 @@ import (
 )
 
 type Config struct {
-	DatabaseURL     string
-	SlackWebHookURL string
-	CacheDir        string
+	DatabaseURL string
+	CacheDir    string
+
+	// slack
+	SlackWebHookURL    string
+	SlackReportChannel string
+	SlackBotName       string
+	SlackBotIcon       string
 
 	// for debug
 	GithubAccessToken string
@@ -21,9 +26,14 @@ func Load() (*Config, error) {
 	}
 
 	config := &Config{
-		DatabaseURL:       os.Getenv("DATABASE_URL"),
-		SlackWebHookURL:   os.Getenv("SLACK_WEBHOOK_URL"),
-		CacheDir:          os.Getenv("CACHE_DIR"),
+		DatabaseURL: os.Getenv("DATABASE_URL"),
+		CacheDir:    os.Getenv("CACHE_DIR"),
+
+		SlackWebHookURL:    os.Getenv("SLACK_WEBHOOK_URL"),
+		SlackReportChannel: "#" + os.Getenv("SLACK_REPORT_CHANNEL"),
+		SlackBotName:       os.Getenv("SLACK_BOT_NAME"),
+		SlackBotIcon:       ":" + os.Getenv("SLACK_BOT_ICON") + ":",
+
 		GithubAccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 	}
 
