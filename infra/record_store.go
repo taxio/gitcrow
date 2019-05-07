@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/infra/record"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"strings"
@@ -34,9 +35,8 @@ func (s *recordStoreImpl) Sync(ctx context.Context, repos []*model.GitRepo) erro
 
 func (s *recordStoreImpl) GetSlackId(ctx context.Context, username string) (string, bool, error) {
 	user, err := record.Users(qm.Where("name=?", username)).One(ctx, s.db)
-	fmt.Println(user)
 	if err != nil {
-		return "", false, err
+		return "", false, errors.Wrap(err, fmt.Sprintf("select %s's slack id", username))
 	}
 	if user.SlackID.IsZero() {
 		return "", false, nil

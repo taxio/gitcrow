@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/repository"
 	"net/http"
 	"net/url"
@@ -45,12 +46,12 @@ func (s *reportStoreImpl) Notify(ctx context.Context, slackId, message string) e
 	}
 	jsonParams, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	_, err = http.PostForm(s.webHookURL, url.Values{"payload": {string(jsonParams)}})
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/app/server"
 	"github.com/taxio/gitcrow/domain/service"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 func run() error {
@@ -25,6 +26,9 @@ func run() error {
 
 	downloadSvc := service.NewDownloadService(appComp)
 	var cloneSvc service.CloneService  // TODO: impl
+
+	// sqlboiler configure
+	boil.DebugMode = false
 
 	s := grapiserver.New(
 		grapiserver.WithDefaultLogger(),

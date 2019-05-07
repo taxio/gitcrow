@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
@@ -43,7 +44,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 	// check whether the user already requested
 	hasReq, err := s.alreadyRequested(ctx, username)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	if !hasReq {
 		return ErrAlreadyAcceptedDownloadRequest
@@ -51,7 +52,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 
 	err = s.addRequestUser(ctx, username)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	tc := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken}))
@@ -61,20 +62,20 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 	_, _, err = client.RateLimits(ctx)
 	if err != nil {
 		// TODO: handle error (using github.ErrorResponse)
-		return err
+		return errors.WithStack(err)
 	}
 
 	// TODO: validate user save directory
 
 	go func(client *github.Client, username, saveDir string, repos []*model.GitRepo) {
-		grpclog.Infoln("start %s download worker\n", username)
+		grpclog.Infof("start %s download worker\n", username)
 		ctx := context.Background()
 		for _, repo := range repos {
 			// check existence in cache
 			exists, err := s.cacheStore.Exists(ctx, repo)
 			if err != nil {
 				// TODO: report
-				fmt.Println(err)
+				grpclog.Errorln(err)
 				continue
 			}
 			if exists {
@@ -85,7 +86,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 			data, err := s.downloadRepository(ctx, client, repo)
 			if err != nil {
 				// TODO: report
-				fmt.Println(err)
+				grpclog.Errorln(err)
 				continue
 			}
 			filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
@@ -106,7 +107,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 			err = s.userStore.Save(ctx, filename, data)
 			if err != nil {
 				// TODO: report
-				fmt.Println(err)
+				grpclog.Errorln(err)
 			}
 
 			grpclog.Infof("finish %s download worker\n", username)

@@ -3,6 +3,7 @@ package infra
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
 	"google.golang.org/grpc/grpclog"
@@ -27,25 +28,24 @@ func (s *cacheStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool,
 func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data []byte) error {
 	// create path
 	p := filepath.Join(s.cacheDir, filename)
-	grpclog.Infof("save %s\n", p)
-	fmt.Println(p)
+	grpclog.Infof("save to cache: %s\n", p)
 
 	// create file
 	file, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to create %s", p))
 	}
-	defer func(){
+	defer func() {
 		err := file.Close()
 		if err != nil {
-			fmt.Println(err)
+			grpclog.Errorln(err)
 		}
 	}()
 
 	// write zip data
 	_, err = file.Write(data)
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("failed to write %s", p))
 	}
 
 	return nil
