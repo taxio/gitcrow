@@ -5,6 +5,8 @@ package record
 
 var TableNames = struct {
 	Cached string
+	Users  string
 }{
 	Cached: "cached",
+	Users:  "users",
 }

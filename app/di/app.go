@@ -46,7 +46,13 @@ func (c *appComponentImpl) RecordStore() repository.RecordStore {
 }
 
 func (c *appComponentImpl) ReportStore() repository.ReportStore {
-	return infra.NewReportStore(c.config.SlackWebHookURL, "")
+	return infra.NewReportStore(
+		c.config.SlackWebHookURL,
+		c.config.SlackReportChannel,
+		c.config.SlackBotName,
+		c.config.SlackBotIcon,
+		c.config.BaseDir,
+	)
 }
 
 func (c *appComponentImpl) UserStore() repository.UserStore {
