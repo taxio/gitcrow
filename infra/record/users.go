@@ -24,34 +24,34 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	ID       int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Username string      `boil:"username" json:"username" toml:"username" yaml:"username"`
-	SlackID  null.String `boil:"slack_id" json:"slack_id,omitempty" toml:"slack_id" yaml:"slack_id,omitempty"`
+	ID      int         `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Name    string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	SlackID null.String `boil:"slack_id" json:"slack_id,omitempty" toml:"slack_id" yaml:"slack_id,omitempty"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	ID       string
-	Username string
-	SlackID  string
+	ID      string
+	Name    string
+	SlackID string
 }{
-	ID:       "id",
-	Username: "username",
-	SlackID:  "slack_id",
+	ID:      "id",
+	Name:    "name",
+	SlackID: "slack_id",
 }
 
 // Generated where
 
 var UserWhere = struct {
-	ID       whereHelperint
-	Username whereHelperstring
-	SlackID  whereHelpernull_String
+	ID      whereHelperint
+	Name    whereHelperstring
+	SlackID whereHelpernull_String
 }{
-	ID:       whereHelperint{field: `id`},
-	Username: whereHelperstring{field: `username`},
-	SlackID:  whereHelpernull_String{field: `slack_id`},
+	ID:      whereHelperint{field: `id`},
+	Name:    whereHelperstring{field: `name`},
+	SlackID: whereHelpernull_String{field: `slack_id`},
 }
 
 // UserRels is where relationship names are stored.
@@ -71,9 +71,9 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userColumns               = []string{"id", "username", "slack_id"}
-	userColumnsWithoutDefault = []string{"id", "username", "slack_id"}
-	userColumnsWithDefault    = []string{}
+	userColumns               = []string{"id", "name", "slack_id"}
+	userColumnsWithoutDefault = []string{"name", "slack_id"}
+	userColumnsWithDefault    = []string{"id"}
 	userPrimaryKeyColumns     = []string{"id"}
 )
 
