@@ -29,7 +29,6 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	// TODO: improve permission
 	baseDir := filepath.Clean(os.Getenv("BASE_DIR"))
 	if _, err := os.Stat(baseDir); err != nil {
 		grpclog.Infof("make %s\n", baseDir)
@@ -43,7 +42,7 @@ func Load() (*Config, error) {
 	if _, err := os.Stat(cacheDir); err != nil {
 		grpclog.Infof("make cache directory: %s\n", cacheDir)
 		fmt.Printf("make cache directory: %s\n", cacheDir)
-		if err := os.Mkdir(cacheDir, 0777); err != nil {
+		if err := os.Mkdir(cacheDir, 0744); err != nil {
 			grpclog.Errorln(err)
 			fmt.Println(err)
 		}
