@@ -18,7 +18,7 @@ type RecordStore interface {
 }
 
 type UserStore interface {
-	Save(ctx context.Context, filename string, data []byte) error
+	Save(ctx context.Context, username, projectName, filename string, data []byte) error
 	Clone(ctx context.Context, repo *model.GitRepo) error
 }
 

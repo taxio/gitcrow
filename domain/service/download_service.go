@@ -18,7 +18,7 @@ import (
 var ErrAlreadyAcceptedDownloadRequest = xerrors.New("the user already requested download")
 
 type DownloadService interface {
-	DelegateToWorker(ctx context.Context, username, saveDir, accessToken string, repos []*model.GitRepo) error
+	DelegateToWorker(ctx context.Context, username, projectName, accessToken string, repos []*model.GitRepo) error
 }
 
 type downloadServiceImpl struct {
@@ -40,7 +40,7 @@ func NewDownloadService(component di.AppComponent) DownloadService {
 	}
 }
 
-func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, saveDir, accessToken string, repos []*model.GitRepo) error {
+func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, projectName, accessToken string, repos []*model.GitRepo) error {
 	// check whether the user already requested
 	hasReq, err := s.alreadyRequested(ctx, username)
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 
 	// TODO: validate user save directory
 
-	go func(client *github.Client, username, saveDir string, repos []*model.GitRepo) {
+	go func(client *github.Client, username, projectName string, repos []*model.GitRepo) {
 		grpclog.Infof("start %s download worker\n", username)
 		ctx := context.Background()
 		for _, repo := range repos {
@@ -103,8 +103,8 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 				grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
 			}
 
-			// TODO: saveDirに保存
-			err = s.userStore.Save(ctx, filename, data)
+			// save to user dir
+			err = s.userStore.Save(ctx, username, projectName, filename, data)
 			if err != nil {
 				// TODO: report
 				grpclog.Errorln(err)
@@ -130,7 +130,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 		if err != nil {
 			grpclog.Errorf("remove request user failed: #s, %#v\n", username, err)
 		}
-	}(client, username, saveDir, repos)
+	}(client, username, projectName, repos)
 
 	return nil
 }
