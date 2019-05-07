@@ -3,6 +3,10 @@ package infra
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"github.com/taxio/gitcrow/infra/record"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+	"strings"
 
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
@@ -26,4 +30,18 @@ func (s *recordStoreImpl) Insert(ctx context.Context, repo *model.GitRepo) error
 
 func (s *recordStoreImpl) Sync(ctx context.Context, repos []*model.GitRepo) error {
 	return nil
+}
+
+func (s *recordStoreImpl) GetSlackId(ctx context.Context, username string) (string, bool, error) {
+	user, err := record.Users(qm.Where("name=?", username)).One(ctx, s.db)
+	fmt.Println(user)
+	if err != nil {
+		return "", false, err
+	}
+	if user.SlackID.IsZero() {
+		return "", false, nil
+	}
+	slackId := user.SlackID.String
+	slackId = strings.TrimSpace(slackId)
+	return slackId, true, nil
 }

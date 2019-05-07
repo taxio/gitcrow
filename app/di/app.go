@@ -51,7 +51,7 @@ func (c *appComponentImpl) ReportStore() repository.ReportStore {
 		c.config.SlackReportChannel,
 		c.config.SlackBotName,
 		c.config.SlackBotIcon,
-		"",
+		c.config.UsersBaseDir,
 	)
 }
 

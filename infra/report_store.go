@@ -3,6 +3,7 @@ package infra
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/taxio/gitcrow/domain/repository"
 	"net/http"
 	"net/url"
@@ -34,7 +35,8 @@ type slackData struct {
 	Channel   string `json:"channel"`
 }
 
-func (s *reportStoreImpl) Notify(ctx context.Context, username, message string) error {
+func (s *reportStoreImpl) Notify(ctx context.Context, slackId, message string) error {
+	message = fmt.Sprintf("<@%s> %s", slackId, message)
 	data := slackData{
 		Text:      message,
 		Username:  s.botName,

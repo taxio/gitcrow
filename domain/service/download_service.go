@@ -113,7 +113,14 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 		}
 
 		// report to user
-		err := s.reportStore.Notify(ctx, username, "finish download worker")
+		slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
+		if err != nil {
+			grpclog.Errorln(err)
+		}
+		if !ok {
+			slackId = username
+		}
+		err = s.reportStore.Notify(ctx, slackId, "finish download worker")
 		if err != nil {
 			grpclog.Error(err)
 		}
