@@ -24,7 +24,26 @@ func NewUserStore(baseDir string) repository.UserStore {
 func (s *userStoreImpl) Save(ctx context.Context, username, projectName, filename string, data []byte) error {
 	// create path
 	// TODO: validate for traverse
-	p := filepath.Join(s.baseDir, username, projectName, filename)
+
+	// make user dir if not exist
+	p := filepath.Join(s.baseDir, username)
+	if _, err := os.Stat(p); err != nil {
+		grpclog.Infof("make dir: %s\n", p)
+		if err := os.Mkdir(p, 0777); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	// make project dir if not exist
+	p = filepath.Join(p, projectName)
+	if _, err := os.Stat(p); err != nil {
+		grpclog.Infof("make dir: %s\n", p)
+		if err := os.Mkdir(p, 0777); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	p = filepath.Join(p, filename)
 	grpclog.Infof("save: %s\n", p)
 
 	// create file
