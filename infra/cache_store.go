@@ -31,7 +31,7 @@ func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data []byte)
 	grpclog.Infof("save to cache: %s\n", p)
 
 	// create file
-	file, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to create %s", p))
 	}

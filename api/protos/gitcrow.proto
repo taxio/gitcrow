@@ -33,7 +33,7 @@ message Repository {
 message CloneRepositoriesRequest {
     string username = 1;
     string access_token = 2;
-    string save_dir = 3;
+    string project_name = 3;
 
     repeated Repository repos = 4;
 }
@@ -45,7 +45,7 @@ message CloneRepositoriesResponse {
 message DownloadRepositoriesRequest {
     string username = 1;
     string access_token = 2;
-    string save_dir = 3;
+    string project_name = 3;
 
     repeated Repository repos = 4;
 }

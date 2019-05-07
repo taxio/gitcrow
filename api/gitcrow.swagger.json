@@ -78,7 +78,7 @@
         "access_token": {
           "type": "string"
         },
-        "save_dir": {
+        "project_name": {
           "type": "string"
         },
         "repos": {
@@ -106,7 +106,7 @@
         "access_token": {
           "type": "string"
         },
-        "save_dir": {
+        "project_name": {
           "type": "string"
         },
         "repos": {

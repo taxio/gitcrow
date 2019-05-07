@@ -56,5 +56,5 @@ func (c *appComponentImpl) ReportStore() repository.ReportStore {
 }
 
 func (c *appComponentImpl) UserStore() repository.UserStore {
-	return infra.NewUserStore()
+	return infra.NewUserStore(c.config.BaseDir)
 }

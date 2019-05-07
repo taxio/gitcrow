@@ -46,7 +46,7 @@ func (s *gitcrowServiceServerImpl) DownloadRepositories(ctx context.Context, req
 		})
 	}
 
-	err := s.downloadSvc.DelegateToWorker(ctx, req.Username, req.SaveDir, req.AccessToken, repos)
+	err := s.downloadSvc.DelegateToWorker(ctx, req.Username, req.ProjectName, req.AccessToken, repos)
 	if err != nil {
 		// TODO: handle error response
 		return nil, status.Error(codes.Unavailable, "request failed")
