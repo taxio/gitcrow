@@ -1,14 +1,17 @@
 package config
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc/grpclog"
 	"os"
+	"path/filepath"
 )
 
 type Config struct {
-	DatabaseURL  string
-	CacheDir     string
-	UsersBaseDir string
+	DatabaseURL string
+	BaseDir     string
+	CacheDir    string
 
 	// slack
 	SlackWebHookURL    string
@@ -26,10 +29,30 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	// TODO: improve permission
+	baseDir := filepath.Clean(os.Getenv("BASE_DIR"))
+	if _, err := os.Stat(baseDir); err != nil {
+		grpclog.Infof("make %s\n", baseDir)
+		fmt.Printf("make %s\n", baseDir)
+		if err := os.Mkdir(baseDir, 0777); err != nil {
+			grpclog.Errorln(err)
+			fmt.Println(err)
+		}
+	}
+	cacheDir := filepath.Join(baseDir, ".cache/")
+	if _, err := os.Stat(cacheDir); err != nil {
+		grpclog.Infof("make cache directory: %s\n", cacheDir)
+		fmt.Printf("make cache directory: %s\n", cacheDir)
+		if err := os.Mkdir(cacheDir, 0777); err != nil {
+			grpclog.Errorln(err)
+			fmt.Println(err)
+		}
+	}
+
 	config := &Config{
-		DatabaseURL:  os.Getenv("DATABASE_URL"),
-		CacheDir:     os.Getenv("CACHE_DIR"),
-		UsersBaseDir: os.Getenv("USRES_BASE_DIR"),
+		DatabaseURL: os.Getenv("DATABASE_URL"),
+		BaseDir:     baseDir,
+		CacheDir:    cacheDir,
 
 		SlackWebHookURL:    os.Getenv("SLACK_WEBHOOK_URL"),
 		SlackReportChannel: "#" + os.Getenv("SLACK_REPORT_CHANNEL"),
