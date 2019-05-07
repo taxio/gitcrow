@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	CacheDir    string
+	DatabaseURL  string
+	CacheDir     string
+	UsersBaseDir string
 
 	// slack
 	SlackWebHookURL    string
@@ -26,8 +27,9 @@ func Load() (*Config, error) {
 	}
 
 	config := &Config{
-		DatabaseURL: os.Getenv("DATABASE_URL"),
-		CacheDir:    os.Getenv("CACHE_DIR"),
+		DatabaseURL:  os.Getenv("DATABASE_URL"),
+		CacheDir:     os.Getenv("CACHE_DIR"),
+		UsersBaseDir: os.Getenv("USRES_BASE_DIR"),
 
 		SlackWebHookURL:    os.Getenv("SLACK_WEBHOOK_URL"),
 		SlackReportChannel: "#" + os.Getenv("SLACK_REPORT_CHANNEL"),
