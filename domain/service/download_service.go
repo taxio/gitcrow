@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"io/ioutil"
 	"net/http"
+	"sync"
 )
 
 var ErrAlreadyAcceptedDownloadRequest = xerrors.New("the user already requested download")
@@ -28,6 +29,8 @@ type downloadServiceImpl struct {
 	recordStore repository.RecordStore
 	reportStore repository.ReportStore
 	userStore   repository.UserStore
+
+	mu sync.Mutex
 }
 
 func NewDownloadService(component di.AppComponent) DownloadService {
@@ -49,7 +52,6 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 	if !hasReq {
 		return ErrAlreadyAcceptedDownloadRequest
 	}
-
 	err = s.addRequestUser(ctx, username)
 	if err != nil {
 		return errors.WithStack(err)
@@ -62,77 +64,82 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 	_, _, err = client.RateLimits(ctx)
 	if err != nil {
 		// TODO: handle error (using github.ErrorResponse)
+		_ = s.removeRequestUser(ctx, username)
 		return errors.WithStack(err)
 	}
 
 	// TODO: validate user save directory
 
-	go func(client *github.Client, username, projectName string, repos []*model.GitRepo) {
-		grpclog.Infof("start %s download worker\n", username)
-		ctx := context.Background()
-		for _, repo := range repos {
-			// check existence in cache
-			exists, err := s.cacheStore.Exists(ctx, repo)
-			if err != nil {
-				// TODO: report
-				grpclog.Errorln(err)
-				continue
-			}
-			if exists {
-				continue
-			}
+	go s.runWorker(client, username, projectName, repos)
 
-			// download zip data
-			data, err := s.downloadRepository(ctx, client, repo)
-			if err != nil {
-				// TODO: report
-				grpclog.Errorln(err)
-				continue
-			}
-			filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
+	return nil
+}
 
-			// record to DB
-			err = s.recordStore.Insert(ctx, repo)
-			if err != nil {
-				grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
-			}
-
-			// save to cache dir
-			err = s.cacheStore.Save(ctx, filename, data)
-			if err != nil {
-				grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
-			}
-
-			// save to user dir
-			err = s.userStore.Save(ctx, username, projectName, filename, data)
-			if err != nil {
-				// TODO: report
-				grpclog.Errorln(err)
-			}
-
-			grpclog.Infof("finish %s download worker\n", username)
+func (s *downloadServiceImpl) runWorker(client *github.Client, username, projectName string, repos []*model.GitRepo) {
+	grpclog.Infof("start %s download worker\n", username)
+	ctx := context.Background()
+	for _, repo := range repos {
+		// check existence in cache
+		exists, err := s.cacheStore.Exists(ctx, repo)
+		if err != nil {
+			// TODO: report
+			grpclog.Errorln(err)
+			continue
+		}
+		if exists {
+			continue
 		}
 
-		// report to user
-		slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
+		// download zip data
+		data, err := s.downloadRepository(ctx, client, repo)
 		if err != nil {
+			// TODO: report
+			grpclog.Errorln(err)
+			continue
+		}
+		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
+
+		// record to DB
+		err = s.recordStore.Insert(ctx, repo)
+		if err != nil {
+			grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
+		}
+
+		// save to cache dir
+		err = s.cacheStore.Save(ctx, filename, data)
+		if err != nil {
+			grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
+		}
+
+		// save to user dir
+		err = s.userStore.Save(ctx, username, projectName, filename, data)
+		if err != nil {
+			// TODO: report
 			grpclog.Errorln(err)
 		}
-		if !ok {
-			slackId = username
-		}
-		err = s.reportStore.Notify(ctx, slackId, "finish download worker")
-		if err != nil {
-			grpclog.Error(err)
-		}
 
+		grpclog.Infof("finish %s download worker\n", username)
+	}
+
+	// report to user
+	slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
+	if err != nil {
+		grpclog.Errorln(err)
+	}
+	if !ok {
+		slackId = username
+	}
+	err = s.reportStore.Notify(ctx, slackId, "finish download worker")
+	if err != nil {
+		grpclog.Error(err)
+	}
+
+	defer func() {
 		err = s.removeRequestUser(ctx, username)
 		if err != nil {
 			grpclog.Errorf("remove request user failed: #s, %#v\n", username, err)
 		}
-	}(client, username, projectName, repos)
-
-	return nil
+	}()
 }
 
 func (s *downloadServiceImpl) alreadyRequested(ctx context.Context, username string) (bool, error) {
@@ -145,16 +152,20 @@ func (s *downloadServiceImpl) alreadyRequested(ctx context.Context, username str
 }
 
 func (s *downloadServiceImpl) addRequestUser(ctx context.Context, username string) error {
+	s.mu.Lock()
 	s.requestUsers = append(s.requestUsers, username)
+	s.mu.Unlock()
 	return nil
 }
 
 func (s *downloadServiceImpl) removeRequestUser(ctx context.Context, username string) error {
+	s.mu.Lock()
 	for i, user := range s.requestUsers {
 		if user == username {
 			s.requestUsers = append(s.requestUsers[:i], s.requestUsers[i+1:]...)
 		}
 	}
+	s.mu.Unlock()
 	return nil
 }
 
