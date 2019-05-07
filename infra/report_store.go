@@ -2,22 +2,55 @@ package infra
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/taxio/gitcrow/domain/repository"
+	"net/http"
+	"net/url"
 )
 
 type reportStoreImpl struct {
-	WebHookURL string
-	SaveDir    string
+	webHookURL string
+	channel    string
+	botName    string
+	botIcon    string
+
+	saveDir string
 }
 
-func NewReportStore(webHookURL, saveDir string) repository.ReportStore {
+func NewReportStore(webHookURL, channel, botName, botIcon, saveDir string) repository.ReportStore {
 	return &reportStoreImpl{
-		WebHookURL: webHookURL,
-		SaveDir:    saveDir,
+		webHookURL: webHookURL,
+		channel:    channel,
+		botName:    botName,
+		botIcon:    botIcon,
+		saveDir:    saveDir,
 	}
 }
 
+type slackData struct {
+	Text      string `json:"text"`
+	Username  string `json:"username"`
+	IconEmoji string `json:"icon_emoji"`
+	Channel   string `json:"channel"`
+}
+
 func (s *reportStoreImpl) Notify(ctx context.Context, username, message string) error {
+	data := slackData{
+		Text:      message,
+		Username:  s.botName,
+		IconEmoji: s.botIcon,
+		Channel:   s.channel,
+	}
+	jsonParams, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	_, err = http.PostForm(s.webHookURL, url.Values{"payload": {string(jsonParams)}})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

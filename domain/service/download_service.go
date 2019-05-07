@@ -112,7 +112,11 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, sa
 			grpclog.Infof("finish %s download worker\n", username)
 		}
 
-		// TODO: ユーザーに通知 & report作成
+		// report to user
+		err := s.reportStore.Notify(ctx, username, "finish download worker")
+		if err != nil {
+			grpclog.Error(err)
+		}
 
 		err = s.removeRequestUser(ctx, username)
 		if err != nil {
