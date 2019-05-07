@@ -7,7 +7,7 @@ import (
 )
 
 func TestGitcrowServiceServerImpl_CloneRepositories(t *testing.T) {
-	svr := NewGitcrowServiceServer()
+	svr := NewGitcrowServiceServer(nil, nil)
 
 	ctx := context.Background()
 	req := &api_pb.CloneRepositoriesRequest{}
@@ -26,7 +26,7 @@ func TestGitcrowServiceServerImpl_CloneRepositories(t *testing.T) {
 }
 
 func TestGitcrowServiceServerImpl_DownloadRepositories(t *testing.T) {
-	svr := NewGitcrowServiceServer()
+	svr := NewGitcrowServiceServer(nil, nil)
 
 	ctx := context.Background()
 	req := &api_pb.DownloadRepositoriesRequest{}

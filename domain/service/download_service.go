@@ -161,6 +161,7 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 		}
 	}
 	if len(zipUrl) == 0 {
+		// TODO: create error for handling
 		return nil, fmt.Errorf("tag not found")
 	}
 
