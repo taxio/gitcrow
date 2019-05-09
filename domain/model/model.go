@@ -6,3 +6,9 @@ type GitRepo struct {
 	Tag     string
 	IsClone bool
 }
+
+type Report struct {
+	GitRepo *GitRepo
+	Success bool
+	Message string
+}

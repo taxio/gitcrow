@@ -2,12 +2,10 @@ package infra
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
-	"google.golang.org/grpc/grpclog"
-	"os"
+	"io/ioutil"
 	"path/filepath"
 )
 
@@ -21,37 +19,34 @@ func NewUserStore(baseDir string) repository.UserStore {
 	}
 }
 
+func (s *userStoreImpl) ValidatePathname(ctx context.Context, username, projectName string) error {
+	err := ValidateUserFilePath(ctx, username, projectName, "tmp.zip")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *userStoreImpl) MakeUserProjectDir(ctx context.Context, username, projectName string) error {
+	err := MkdirRecurrently(ctx, s.baseDir, username, projectName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *userStoreImpl) Save(ctx context.Context, username, projectName, filename string, data []byte) error {
 	// validate for traverse
-	err := ValidateUserFilePath(username, projectName, filename)
+	err := ValidateUserFilePath(ctx, username, projectName, filename)
 	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	err = MkdirRecurrently(s.baseDir, username, projectName)
-	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	p := filepath.Join(s.baseDir, username, projectName, filename)
-	grpclog.Infof("save: %s\n", p)
 
-	// create file
-	file, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0666)
+	err = ioutil.WriteFile(p, data, 0666)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to create %s", p))
-	}
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			grpclog.Errorln(err)
-		}
-	}()
-
-	// write zip data
-	_, err = file.Write(data)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to write %s", p))
+		return errors.WithStack(err)
 	}
 
 	return nil

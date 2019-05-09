@@ -8,6 +8,7 @@ import (
 	"github.com/taxio/gitcrow/app/server"
 	"github.com/taxio/gitcrow/domain/service"
 	"github.com/volatiletech/sqlboiler/boil"
+	"log"
 )
 
 func run() error {
@@ -16,12 +17,12 @@ func run() error {
 
 	cfg, err := config.Load()
 	if err != nil {
-		return err
+		log.Fatalf("%+v\n", err)
 	}
 
 	appComp, err := di.CreateAppComponent(cfg)
 	if err != nil {
-		return err
+		log.Fatalf("%+v\n", err)
 	}
 
 	downloadSvc := service.NewDownloadService(appComp)

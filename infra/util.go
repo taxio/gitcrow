@@ -1,6 +1,7 @@
 package infra
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/grpclog"
 	"os"
@@ -10,7 +11,7 @@ import (
 
 var ErrInvalidFilePath = errors.New("invalid file path")
 
-func ValidateUserFilePath(username, projectName, filename string) error {
+func ValidateUserFilePath(ctx context.Context, username, projectName, filename string) error {
 	if strings.Index(username, "..") != -1 {
 		return errors.WithStack(ErrInvalidFilePath)
 	}
@@ -29,7 +30,7 @@ func ValidateUserFilePath(username, projectName, filename string) error {
 	return nil
 }
 
-func MkdirRecurrently(baseDir, username, projectName string) error {
+func MkdirRecurrently(ctx context.Context, baseDir, username, projectName string) error {
 	// make user dir if not exist
 	p := filepath.Join(baseDir, username)
 	if _, err := os.Stat(p); err != nil {

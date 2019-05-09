@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/izumin5210/grapi/pkg/grapiserver"
+	"github.com/pkg/errors"
 	api_pb "github.com/taxio/gitcrow/api"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/service"
@@ -48,8 +49,15 @@ func (s *gitcrowServiceServerImpl) DownloadRepositories(ctx context.Context, req
 
 	err := s.downloadSvc.DelegateToWorker(ctx, req.Username, req.ProjectName, req.AccessToken, repos)
 	if err != nil {
-		// TODO: handle error response
-		return nil, status.Error(codes.Unavailable, "request failed")
+		switch errors.Cause(err) {
+		case service.ErrGitHubAuth:
+			return nil, status.Error(codes.Unauthenticated, "invalid github token")
+		case service.ErrPathValidation:
+			return nil, status.Error(codes.InvalidArgument, "invalid path")
+		case service.ErrAlreadyAcceptedDownloadRequest:
+			return nil, status.Error(codes.AlreadyExists, "you already requested")
+		}
+		return nil, status.Error(codes.Internal, "internal error, sorry")
 	}
 
 	return &api_pb.DownloadRepositoriesResponse{Message: "request accepted"}, nil
