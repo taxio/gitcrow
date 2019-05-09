@@ -235,9 +235,13 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 
 	// check tag existence
 	var zipUrl string
-	for _, tag := range tags {
-		if *tag.Name == repo.Tag {
-			zipUrl = *tag.ZipballURL
+	if repo.Tag == model.LatestTag && len(tags) > 0 {
+		zipUrl = *tags[0].ZipballURL
+	} else {
+		for _, tag := range tags {
+			if *tag.Name == repo.Tag {
+				zipUrl = *tag.ZipballURL
+			}
 		}
 	}
 	if len(zipUrl) == 0 {

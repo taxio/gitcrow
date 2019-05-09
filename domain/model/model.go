@@ -12,3 +12,7 @@ type Report struct {
 	Success bool
 	Message string
 }
+
+var (
+	LatestTag = "latest:tag" // Since colons cannot be used in git tag names
+)
