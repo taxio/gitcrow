@@ -103,12 +103,12 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		var data []byte
 		exists, err := s.cacheStore.Exists(ctx, filename)
 		if err != nil {
-			grpclog.Errorln(err)
+			grpclog.Errorf("%+v\n", err)
 		}
 		if exists {
 			data, err = s.cacheStore.LoadZip(ctx, filename)
 			if err != nil {
-				grpclog.Errorln(errors.WithStack(err))
+				grpclog.Errorf("%+v\n", err)
 			}
 		}
 
@@ -121,7 +121,7 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 					msg = "Tag not found"
 				} else {
 					msg = "InternalError: Cannot download"
-					grpclog.Errorln(err)
+					grpclog.Errorf("%+v\n", err)
 				}
 				reports = append(reports, &model.Report{
 					GitRepo: repo,
@@ -139,21 +139,21 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			if !exists {
 				err = s.recordStore.Insert(ctx, repo)
 				if err != nil {
-					grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
+					grpclog.Errorf("db record failed: %+v, %+v\n", repo, err)
 				}
 			}
 
 			// save to cache dir
 			err = s.cacheStore.Save(ctx, filename, data)
 			if err != nil {
-				grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
+				grpclog.Errorf("cannot save to cache: %s, %+v\n", filename, err)
 			}
 		}
 
 		// save to user dir
 		err = s.userStore.Save(ctx, username, projectName, filename, data)
 		if err != nil {
-			grpclog.Errorln(err)
+			grpclog.Errorf("%+v\n", err)
 			reports = append(reports, &model.Report{
 				GitRepo: repo,
 				Success: false,
@@ -171,24 +171,24 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 	// report to user
 	slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
 	if err != nil {
-		grpclog.Errorln(errors.WithStack(err))
+		grpclog.Errorf("%+v\n", err)
 	}
 	if !ok {
 		slackId = username
 	}
 	err = s.reportStore.Notify(ctx, slackId, "finish download worker")
 	if err != nil {
-		grpclog.Error(errors.WithStack(err))
+		grpclog.Errorf("%+v\n", err)
 	}
 	err = s.reportStore.ReportToFile(ctx, username, projectName, reports)
 	if err != nil {
-		grpclog.Error(errors.WithStack(err))
+		grpclog.Errorf("%+v\n", err)
 	}
 
 	defer func() {
 		err = s.removeRequestUser(ctx, username)
 		if err != nil {
-			grpclog.Errorf("remove request user failed: #s, %#v\n", username, err)
+			grpclog.Errorf("remove request user failed: #s, %+v\n", username, err)
 		}
 	}()
 
