@@ -9,14 +9,16 @@ import (
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
 	"golang.org/x/oauth2"
-	"golang.org/x/xerrors"
 	"google.golang.org/grpc/grpclog"
 	"io/ioutil"
 	"net/http"
 	"sync"
 )
 
-var ErrAlreadyAcceptedDownloadRequest = xerrors.New("the user already requested download")
+var (
+	ErrAlreadyAcceptedDownloadRequest = errors.New("the user already requested download")
+	ErrTagNotFound                    = errors.New("Tag not found")
+)
 
 type DownloadService interface {
 	DelegateToWorker(ctx context.Context, username, projectName, accessToken string, repos []*model.GitRepo) error
@@ -86,12 +88,6 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		exists, err := s.cacheStore.Exists(ctx, repo)
 		if err != nil {
 			grpclog.Errorln(err)
-			reports = append(reports, &model.Report{
-				GitRepo: repo,
-				Code:    model.ReportInternalErr,
-				Message: "Cache Check Error",
-			})
-			continue
 		}
 		if exists {
 			// TODO: handle
@@ -102,12 +98,22 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		// download zip data
 		data, err := s.downloadRepository(ctx, client, repo)
 		if err != nil {
-			// TODO: handle error
-			grpclog.Errorln(err)
+			var (
+				code model.ReportCode
+				msg  string
+			)
+			if errors.Cause(err) == ErrTagNotFound {
+				code = model.ReportInternalErr
+				msg = "Tag not found"
+			} else {
+				code = model.ReportInternalErr
+				msg = "Cannot download"
+				grpclog.Errorln(err)
+			}
 			reports = append(reports, &model.Report{
 				GitRepo: repo,
-				Code:    model.ReportInternalErr,
-				Message: "Cannot Download",
+				Code:    code,
+				Message: msg,
 			})
 			continue
 		}
@@ -200,7 +206,7 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 	// get tag list
 	tags, _, err := client.Repositories.ListTags(ctx, repo.Owner, repo.Repo, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// check tag existence
@@ -211,18 +217,17 @@ func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *gi
 		}
 	}
 	if len(zipUrl) == 0 {
-		// TODO: create error for handling
-		return nil, fmt.Errorf("tag not found")
+		return nil, errors.WithStack(ErrTagNotFound)
 	}
 
 	// download zip
 	resp, err := http.Get(zipUrl)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return body, nil
