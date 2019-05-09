@@ -79,7 +79,7 @@ func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectNam
 	defer func() {
 		err := file.Close()
 		if err != nil {
-			grpclog.Errorln(errors.WithStack(err))
+			grpclog.Errorf("%+v\n", errors.WithStack(err))
 		}
 	}()
 

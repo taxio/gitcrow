@@ -19,6 +19,8 @@ import (
 var (
 	ErrAlreadyAcceptedDownloadRequest = errors.New("the user already requested download")
 	ErrTagNotFound                    = errors.New("Tag not found")
+	ErrGitHubAuth                     = errors.New("github authentication failed")
+	ErrPathValidation                 = errors.New("invalid path")
 )
 
 type DownloadService interface {
@@ -50,14 +52,14 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 	// check whether the user already requested
 	hasReq, err := s.alreadyRequested(ctx, username)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	if !hasReq {
-		return ErrAlreadyAcceptedDownloadRequest
+		return errors.WithStack(ErrAlreadyAcceptedDownloadRequest)
 	}
 	err = s.addRequestUser(ctx, username)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	tc := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken}))
@@ -68,19 +70,21 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 	if err != nil {
 		// TODO: handle error (using github.ErrorResponse)
 		_ = s.removeRequestUser(ctx, username)
-		return errors.WithStack(err)
+		grpclog.Errorf("%+v\n", err)
+		return errors.WithStack(ErrGitHubAuth)
 	}
 
 	// validate user save directory
 	err = s.userStore.ValidatePathname(ctx, username, projectName)
 	if err != nil {
-		return errors.WithStack(err)
+		grpclog.Errorf("%+v\n", err)
+		return errors.WithStack(ErrPathValidation)
 	}
 
 	// make user save dir
 	err = s.userStore.MakeUserProjectDir(ctx, username, projectName)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	go s.runWorker(client, username, projectName, repos)

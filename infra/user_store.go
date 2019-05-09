@@ -22,7 +22,7 @@ func NewUserStore(baseDir string) repository.UserStore {
 func (s *userStoreImpl) ValidatePathname(ctx context.Context, username, projectName string) error {
 	err := ValidateUserFilePath(ctx, username, projectName, "tmp.zip")
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }
@@ -30,7 +30,7 @@ func (s *userStoreImpl) ValidatePathname(ctx context.Context, username, projectN
 func (s *userStoreImpl) MakeUserProjectDir(ctx context.Context, username, projectName string) error {
 	err := MkdirRecurrently(ctx, s.baseDir, username, projectName)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	return nil
 }
@@ -39,7 +39,7 @@ func (s *userStoreImpl) Save(ctx context.Context, username, projectName, filenam
 	// validate for traverse
 	err := ValidateUserFilePath(ctx, username, projectName, filename)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	p := filepath.Join(s.baseDir, username, projectName, filename)
