@@ -112,21 +112,16 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			// download zip data
 			data, err = s.downloadRepository(ctx, client, repo)
 			if err != nil {
-				var (
-					code model.ReportCode
-					msg  string
-				)
+				var msg string
 				if errors.Cause(err) == ErrTagNotFound {
-					code = model.ReportInternalErr
 					msg = "Tag not found"
 				} else {
-					code = model.ReportInternalErr
-					msg = "Cannot download"
+					msg = "InternalError: Cannot download"
 					grpclog.Errorln(err)
 				}
 				reports = append(reports, &model.Report{
 					GitRepo: repo,
-					Code:    code,
+					Success: false,
 					Message: msg,
 				})
 				continue
@@ -157,13 +152,13 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			grpclog.Errorln(err)
 			reports = append(reports, &model.Report{
 				GitRepo: repo,
-				Code:    model.ReportSaveErr,
-				Message: "Cannot save",
+				Success: false,
+				Message: "InternalError: Cannot save to user directory",
 			})
 		} else {
 			reports = append(reports, &model.Report{
 				GitRepo: repo,
-				Code:    model.ReportSuccess,
+				Success: true,
 				Message: "",
 			})
 		}

@@ -85,11 +85,18 @@ func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectNam
 
 	w := csv.NewWriter(file)
 	for _, r := range repos {
+		var scss string
+		if r.Success {
+			scss = "success"
+		} else {
+			scss = "failed"
+		}
+
 		s := []string{
 			r.GitRepo.Owner,
 			r.GitRepo.Repo,
 			r.GitRepo.Tag,
-			r.Code.ToString(),
+			scss,
 			r.Message,
 		}
 		err := w.Write(s)
