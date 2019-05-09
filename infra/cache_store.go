@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/repository"
 	"google.golang.org/grpc/grpclog"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -18,6 +19,14 @@ type cacheStoreImpl struct {
 
 func NewCacheStore(cacheDir string) repository.CacheStore {
 	return &cacheStoreImpl{cacheDir: cacheDir}
+}
+
+func (s *cacheStoreImpl) LoadZip(ctx context.Context, filename string) ([]byte, error) {
+	data, err := ioutil.ReadFile(filepath.Join(s.cacheDir, filename))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return data, nil
 }
 
 func (s *cacheStoreImpl) Exists(ctx context.Context, filename string) (bool, error) {

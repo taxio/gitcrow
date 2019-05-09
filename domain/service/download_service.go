@@ -8,6 +8,7 @@ import (
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
+	"github.com/taxio/gitcrow/infra"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc/grpclog"
 	"io/ioutil"
@@ -70,7 +71,17 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 		return errors.WithStack(err)
 	}
 
-	// TODO: validate user save directory
+	// validate user save directory
+	err = infra.ValidateUserFilePath(ctx, username, projectName, "test.zip")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// make user save dir
+	err = s.userStore.MakeUserProjectDir(ctx, username, projectName)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	go s.runWorker(client, username, projectName, repos)
 
@@ -85,49 +96,53 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
 
 		// check existence in cache
+		var data []byte
 		exists, err := s.cacheStore.Exists(ctx, filename)
 		if err != nil {
 			grpclog.Errorln(err)
 		}
 		if exists {
-			// TODO: handle
-			grpclog.Infof("%s is already cached.\n", filename)
-			continue
-		}
-
-		// download zip data
-		data, err := s.downloadRepository(ctx, client, repo)
-		if err != nil {
-			var (
-				code model.ReportCode
-				msg  string
-			)
-			if errors.Cause(err) == ErrTagNotFound {
-				code = model.ReportInternalErr
-				msg = "Tag not found"
-			} else {
-				code = model.ReportInternalErr
-				msg = "Cannot download"
-				grpclog.Errorln(err)
+			data, err = s.cacheStore.LoadZip(ctx, filename)
+			if err != nil {
+				grpclog.Errorln(errors.WithStack(err))
 			}
-			reports = append(reports, &model.Report{
-				GitRepo: repo,
-				Code:    code,
-				Message: msg,
-			})
-			continue
 		}
 
-		// record to DB
-		err = s.recordStore.Insert(ctx, repo)
-		if err != nil {
-			grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
-		}
+		if !exists || data == nil {
+			// download zip data
+			data, err = s.downloadRepository(ctx, client, repo)
+			if err != nil {
+				var (
+					code model.ReportCode
+					msg  string
+				)
+				if errors.Cause(err) == ErrTagNotFound {
+					code = model.ReportInternalErr
+					msg = "Tag not found"
+				} else {
+					code = model.ReportInternalErr
+					msg = "Cannot download"
+					grpclog.Errorln(err)
+				}
+				reports = append(reports, &model.Report{
+					GitRepo: repo,
+					Code:    code,
+					Message: msg,
+				})
+				continue
+			}
 
-		// save to cache dir
-		err = s.cacheStore.Save(ctx, filename, data)
-		if err != nil {
-			grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
+			// record to DB
+			err = s.recordStore.Insert(ctx, repo)
+			if err != nil {
+				grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
+			}
+
+			// save to cache dir
+			err = s.cacheStore.Save(ctx, filename, data)
+			if err != nil {
+				grpclog.Errorf("cannot save to cache: %s, %#v\n", filename, err)
+			}
 		}
 
 		// save to user dir

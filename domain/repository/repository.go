@@ -6,6 +6,7 @@ import (
 )
 
 type CacheStore interface {
+	LoadZip(ctx context.Context, filename string) ([]byte, error)
 	Exists(ctx context.Context, filename string) (bool, error)
 	Save(ctx context.Context, filename string, data []byte) error
 }
@@ -18,6 +19,7 @@ type RecordStore interface {
 }
 
 type UserStore interface {
+	MakeUserProjectDir(ctx context.Context, username, projectName string) error
 	Save(ctx context.Context, username, projectName, filename string, data []byte) error
 	Clone(ctx context.Context, repo *model.GitRepo) error
 }
