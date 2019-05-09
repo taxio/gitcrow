@@ -7,14 +7,14 @@ import (
 )
 
 func TestGitcrowServiceServerImpl_CloneRepositories(t *testing.T) {
+	t.SkipNow()
+
 	svr := NewGitcrowServiceServer(nil, nil)
 
 	ctx := context.Background()
 	req := &api_pb.CloneRepositoriesRequest{}
 
 	resp, err := svr.CloneRepositories(ctx, req)
-
-	t.SkipNow()
 
 	if err != nil {
 		t.Errorf("returned an error %v", err)
@@ -26,14 +26,14 @@ func TestGitcrowServiceServerImpl_CloneRepositories(t *testing.T) {
 }
 
 func TestGitcrowServiceServerImpl_DownloadRepositories(t *testing.T) {
+	t.SkipNow()
+
 	svr := NewGitcrowServiceServer(nil, nil)
 
 	ctx := context.Background()
 	req := &api_pb.DownloadRepositoriesRequest{}
 
 	resp, err := svr.DownloadRepositories(ctx, req)
-
-	t.SkipNow()
 
 	if err != nil {
 		t.Errorf("returned an error %v", err)
