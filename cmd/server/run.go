@@ -25,7 +25,7 @@ func run() error {
 	}
 
 	downloadSvc := service.NewDownloadService(appComp)
-	var cloneSvc service.CloneService  // TODO: impl
+	var cloneSvc service.CloneService // TODO: impl
 
 	// sqlboiler configure
 	boil.DebugMode = false

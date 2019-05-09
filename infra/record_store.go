@@ -23,7 +23,19 @@ func NewRecordStore(db *sql.DB) repository.RecordStore {
 }
 
 func (s *recordStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool, error) {
-	return false, nil
+	cnt, err := record.Cacheds(
+		qm.Where("owner=?", repo.Owner),
+		qm.Where("repo=?", repo.Repo),
+		qm.Where("tag=?", repo.Tag),
+	).Count(ctx, s.db)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+
+	if cnt == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (s *recordStoreImpl) Insert(ctx context.Context, repo *model.GitRepo) error {

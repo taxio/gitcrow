@@ -79,6 +79,8 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 	grpclog.Infof("start %s download worker\n", username)
 	ctx := context.Background()
 	for _, repo := range repos {
+		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
+
 		// check existence in cache
 		exists, err := s.cacheStore.Exists(ctx, repo)
 		if err != nil {
@@ -87,6 +89,7 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			continue
 		}
 		if exists {
+			grpclog.Infof("%s is already cached.\n", filename)
 			continue
 		}
 
@@ -97,7 +100,6 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			grpclog.Errorln(err)
 			continue
 		}
-		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
 
 		// record to DB
 		err = s.recordStore.Insert(ctx, repo)
