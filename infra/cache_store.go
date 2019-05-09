@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
 	"google.golang.org/grpc/grpclog"
 	"os"
@@ -21,8 +20,17 @@ func NewCacheStore(cacheDir string) repository.CacheStore {
 	return &cacheStoreImpl{cacheDir: cacheDir}
 }
 
-func (s *cacheStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool, error) {
-	return false, nil
+func (s *cacheStoreImpl) Exists(ctx context.Context, filename string) (bool, error) {
+	filename = filepath.Join(s.cacheDir, filename)
+	_, err := os.Stat(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		} else {
+			return false, errors.WithStack(err)
+		}
+	}
+	return true, nil
 }
 
 func (s *cacheStoreImpl) Save(ctx context.Context, filename string, data []byte) error {

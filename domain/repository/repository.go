@@ -6,7 +6,7 @@ import (
 )
 
 type CacheStore interface {
-	Exists(ctx context.Context, repo *model.GitRepo) (bool, error)
+	Exists(ctx context.Context, filename string) (bool, error)
 	Save(ctx context.Context, filename string, data []byte) error
 }
 

@@ -85,7 +85,7 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
 
 		// check existence in cache
-		exists, err := s.cacheStore.Exists(ctx, repo)
+		exists, err := s.cacheStore.Exists(ctx, filename)
 		if err != nil {
 			grpclog.Errorln(err)
 		}
