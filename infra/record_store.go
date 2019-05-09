@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/taxio/gitcrow/infra/record"
-	"github.com/volatiletech/sqlboiler/queries/qm"
-	"strings"
-
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
+	"github.com/taxio/gitcrow/infra/record"
+	"github.com/volatiletech/null"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+	"strings"
 )
 
 type recordStoreImpl struct {
@@ -26,6 +27,16 @@ func (s *recordStoreImpl) Exists(ctx context.Context, repo *model.GitRepo) (bool
 }
 
 func (s *recordStoreImpl) Insert(ctx context.Context, repo *model.GitRepo) error {
+	r := record.Cached{
+		Owner: repo.Owner,
+		Repo:  repo.Repo,
+		Tag:   null.StringFrom(repo.Tag),
+	}
+	err := r.Insert(ctx, s.db, boil.Infer())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
 
