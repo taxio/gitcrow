@@ -19,6 +19,7 @@ type RecordStore interface {
 }
 
 type UserStore interface {
+	ValidatePathname(ctx context.Context, username, projectName string) error
 	MakeUserProjectDir(ctx context.Context, username, projectName string) error
 	Save(ctx context.Context, username, projectName, filename string, data []byte) error
 	Clone(ctx context.Context, repo *model.GitRepo) error

@@ -8,7 +8,6 @@ import (
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
-	"github.com/taxio/gitcrow/infra"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc/grpclog"
 	"io/ioutil"
@@ -73,7 +72,7 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 	}
 
 	// validate user save directory
-	err = infra.ValidateUserFilePath(ctx, username, projectName, "test.zip")
+	err = s.userStore.ValidatePathname(ctx, username, projectName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
