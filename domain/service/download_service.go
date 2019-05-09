@@ -133,9 +133,15 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			}
 
 			// record to DB
-			err = s.recordStore.Insert(ctx, repo)
+			exists, err = s.recordStore.Exists(ctx, repo)
 			if err != nil {
-				grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
+				grpclog.Errorf("%+v\n", errors.WithStack(err))
+			}
+			if !exists {
+				err = s.recordStore.Insert(ctx, repo)
+				if err != nil {
+					grpclog.Errorf("db record failed: %#v, %#v\n", repo, err)
+				}
 			}
 
 			// save to cache dir
