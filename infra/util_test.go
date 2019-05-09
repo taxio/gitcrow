@@ -1,8 +1,12 @@
 package infra
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestValidateUserFilePath(t *testing.T) {
+	ctx := context.TODO()
 	type args struct {
 		username    string
 		projectName string
@@ -44,7 +48,7 @@ func TestValidateUserFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateUserFilePath(tt.args.username, tt.args.projectName, tt.args.filename); (err != nil) != tt.wantErr {
+			if err := ValidateUserFilePath(ctx, tt.args.username, tt.args.projectName, tt.args.filename); (err != nil) != tt.wantErr {
 				t.Errorf("ValidateUserFilePath() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

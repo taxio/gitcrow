@@ -21,14 +21,17 @@ func NewUserStore(baseDir string) repository.UserStore {
 	}
 }
 
-func (s *userStoreImpl) Save(ctx context.Context, username, projectName, filename string, data []byte) error {
-	// validate for traverse
-	err := ValidateUserFilePath(username, projectName, filename)
+func (s *userStoreImpl) MakeUserProjectDir(ctx context.Context, username, projectName string) error {
+	err := MkdirRecurrently(ctx, s.baseDir, username, projectName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	return nil
+}
 
-	err = MkdirRecurrently(s.baseDir, username, projectName)
+func (s *userStoreImpl) Save(ctx context.Context, username, projectName, filename string, data []byte) error {
+	// validate for traverse
+	err := ValidateUserFilePath(ctx, username, projectName, filename)
 	if err != nil {
 		return errors.WithStack(err)
 	}
