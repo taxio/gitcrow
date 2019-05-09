@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
+	"time"
 )
 
 var (
@@ -218,6 +219,10 @@ func (s *downloadServiceImpl) removeRequestUser(ctx context.Context, username st
 }
 
 func (s *downloadServiceImpl) downloadRepository(ctx context.Context, client *github.Client, repo *model.GitRepo) ([]byte, error) {
+	// wait for API Limit
+	// FYI: https://developer.github.com/v3/#rate-limiting
+	time.Sleep(1 * time.Second)
+
 	// get tag list
 	tags, _, err := client.Repositories.ListTags(ctx, repo.Owner, repo.Repo, nil)
 	if err != nil {
