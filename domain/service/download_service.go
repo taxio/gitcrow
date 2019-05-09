@@ -78,6 +78,8 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 func (s *downloadServiceImpl) runWorker(client *github.Client, username, projectName string, repos []*model.GitRepo) {
 	grpclog.Infof("start %s download worker\n", username)
 	ctx := context.Background()
+	var compRepos []*model.GitRepo
+	var failRepos []*model.GitRepo
 	for _, repo := range repos {
 		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
 
@@ -86,9 +88,11 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		if err != nil {
 			// TODO: report
 			grpclog.Errorln(err)
+			failRepos = append(failRepos, repo)
 			continue
 		}
 		if exists {
+			// TODO: handle
 			grpclog.Infof("%s is already cached.\n", filename)
 			continue
 		}
@@ -98,6 +102,7 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		if err != nil {
 			// TODO: report
 			grpclog.Errorln(err)
+			failRepos = append(failRepos, repo)
 			continue
 		}
 
@@ -118,9 +123,10 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		if err != nil {
 			// TODO: report
 			grpclog.Errorln(err)
+			failRepos = append(failRepos, repo)
+		} else {
+			compRepos = append(compRepos, repo)
 		}
-
-		grpclog.Infof("finish %s download worker\n", username)
 	}
 
 	// report to user
@@ -142,6 +148,8 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 			grpclog.Errorf("remove request user failed: #s, %#v\n", username, err)
 		}
 	}()
+
+	grpclog.Infof("finish %s download worker\n", username)
 }
 
 func (s *downloadServiceImpl) alreadyRequested(ctx context.Context, username string) (bool, error) {

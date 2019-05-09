@@ -2,12 +2,18 @@ package infra
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
+	"google.golang.org/grpc/grpclog"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 type reportStoreImpl struct {
@@ -16,16 +22,16 @@ type reportStoreImpl struct {
 	botName    string
 	botIcon    string
 
-	saveDir string
+	baseDir string
 }
 
-func NewReportStore(webHookURL, channel, botName, botIcon, saveDir string) repository.ReportStore {
+func NewReportStore(webHookURL, channel, botName, botIcon, baseDir string) repository.ReportStore {
 	return &reportStoreImpl{
 		webHookURL: webHookURL,
 		channel:    channel,
 		botName:    botName,
 		botIcon:    botIcon,
-		saveDir:    saveDir,
+		baseDir:    baseDir,
 	}
 }
 
@@ -58,5 +64,55 @@ func (s *reportStoreImpl) Notify(ctx context.Context, slackId, message string) e
 }
 
 func (s *reportStoreImpl) Save(ctx context.Context) error {
+	return nil
+}
+
+func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectName string, compRepos , failRepos []*model.GitRepo) error {
+	// create report file
+	t := time.Now()
+	filename := fmt.Sprintf("%d-%d-%d_%d-%d-%d_report.csv", t.Year(), t.Month(), t.Day(), t.Hour(), t.Hour(), t.Minute())
+	filename = filepath.Join(s.baseDir, username, projectName, filename)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			grpclog.Errorln(errors.WithStack(err))
+		}
+	}()
+
+	w := csv.NewWriter(file)
+	for _, repo := range compRepos {
+		s := []string{
+			repo.Owner,
+			repo.Repo,
+			repo.Tag,
+			"success",
+		}
+		err := w.Write(s)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	for _, repo := range failRepos {
+		s := []string{
+			repo.Owner,
+			repo.Repo,
+			repo.Tag,
+			"failed",
+		}
+		err := w.Write(s)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
