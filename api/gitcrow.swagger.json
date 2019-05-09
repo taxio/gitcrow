@@ -1,0 +1,143 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "gitcrow.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/clone": {
+      "post": {
+        "operationId": "CloneRepositories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gitcrowCloneRepositoriesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitcrowCloneRepositoriesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GitcrowService"
+        ]
+      }
+    },
+    "/download": {
+      "post": {
+        "operationId": "DownloadRepositories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gitcrowDownloadRepositoriesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gitcrowDownloadRepositoriesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GitcrowService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "gitcrowCloneRepositoriesRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "access_token": {
+          "type": "string"
+        },
+        "project_name": {
+          "type": "string"
+        },
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitcrowRepository"
+          }
+        }
+      }
+    },
+    "gitcrowCloneRepositoriesResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "gitcrowDownloadRepositoriesRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "access_token": {
+          "type": "string"
+        },
+        "project_name": {
+          "type": "string"
+        },
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gitcrowRepository"
+          }
+        }
+      }
+    },
+    "gitcrowDownloadRepositoriesResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "gitcrowRepository": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
