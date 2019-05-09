@@ -78,17 +78,19 @@ func (s *downloadServiceImpl) DelegateToWorker(ctx context.Context, username, pr
 func (s *downloadServiceImpl) runWorker(client *github.Client, username, projectName string, repos []*model.GitRepo) {
 	grpclog.Infof("start %s download worker\n", username)
 	ctx := context.Background()
-	var compRepos []*model.GitRepo
-	var failRepos []*model.GitRepo
+	var reports []*model.Report
 	for _, repo := range repos {
 		filename := fmt.Sprintf("%s-%s-%s.zip", repo.Owner, repo.Repo, repo.Tag)
 
 		// check existence in cache
 		exists, err := s.cacheStore.Exists(ctx, repo)
 		if err != nil {
-			// TODO: report
 			grpclog.Errorln(err)
-			failRepos = append(failRepos, repo)
+			reports = append(reports, &model.Report{
+				GitRepo: repo,
+				Code:    model.ReportInternalErr,
+				Message: "Cache Check Error",
+			})
 			continue
 		}
 		if exists {
@@ -100,9 +102,13 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		// download zip data
 		data, err := s.downloadRepository(ctx, client, repo)
 		if err != nil {
-			// TODO: report
+			// TODO: handle error
 			grpclog.Errorln(err)
-			failRepos = append(failRepos, repo)
+			reports = append(reports, &model.Report{
+				GitRepo: repo,
+				Code:    model.ReportInternalErr,
+				Message: "Cannot Download",
+			})
 			continue
 		}
 
@@ -121,25 +127,36 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 		// save to user dir
 		err = s.userStore.Save(ctx, username, projectName, filename, data)
 		if err != nil {
-			// TODO: report
 			grpclog.Errorln(err)
-			failRepos = append(failRepos, repo)
+			reports = append(reports, &model.Report{
+				GitRepo: repo,
+				Code:    model.ReportSaveErr,
+				Message: "Cannot save",
+			})
 		} else {
-			compRepos = append(compRepos, repo)
+			reports = append(reports, &model.Report{
+				GitRepo: repo,
+				Code:    model.ReportSuccess,
+				Message: "",
+			})
 		}
 	}
 
 	// report to user
 	slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
 	if err != nil {
-		grpclog.Errorln(err)
+		grpclog.Errorln(errors.WithStack(err))
 	}
 	if !ok {
 		slackId = username
 	}
 	err = s.reportStore.Notify(ctx, slackId, "finish download worker")
 	if err != nil {
-		grpclog.Error(err)
+		grpclog.Error(errors.WithStack(err))
+	}
+	err = s.reportStore.ReportToFile(ctx, username, projectName, reports)
+	if err != nil {
+		grpclog.Error(errors.WithStack(err))
 	}
 
 	defer func() {

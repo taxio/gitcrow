@@ -25,5 +25,5 @@ type UserStore interface {
 type ReportStore interface {
 	Notify(ctx context.Context, username, message string) error
 	Save(ctx context.Context) error
-	ReportToFile(ctx context.Context, username, projectName string, compRepos, failRepos []*model.GitRepo) error
+	ReportToFile(ctx context.Context, username, projectName string, repos []*model.Report) error
 }

@@ -67,7 +67,7 @@ func (s *reportStoreImpl) Save(ctx context.Context) error {
 	return nil
 }
 
-func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectName string, compRepos , failRepos []*model.GitRepo) error {
+func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectName string, repos []*model.Report) error {
 	// create report file
 	t := time.Now()
 	filename := fmt.Sprintf("%d-%d-%d_%d-%d-%d_report.csv", t.Year(), t.Month(), t.Day(), t.Hour(), t.Hour(), t.Minute())
@@ -84,24 +84,13 @@ func (s *reportStoreImpl) ReportToFile(ctx context.Context, username, projectNam
 	}()
 
 	w := csv.NewWriter(file)
-	for _, repo := range compRepos {
+	for _, r := range repos {
 		s := []string{
-			repo.Owner,
-			repo.Repo,
-			repo.Tag,
-			"success",
-		}
-		err := w.Write(s)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	for _, repo := range failRepos {
-		s := []string{
-			repo.Owner,
-			repo.Repo,
-			repo.Tag,
-			"failed",
+			r.GitRepo.Owner,
+			r.GitRepo.Repo,
+			r.GitRepo.Tag,
+			r.Code.ToString(),
+			r.Message,
 		}
 		err := w.Write(s)
 		if err != nil {
