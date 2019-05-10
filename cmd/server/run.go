@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/izumin5210/grapi/pkg/grapiserver"
 	"github.com/taxio/gitcrow/app/config"
 	"github.com/taxio/gitcrow/app/di"
 	"github.com/taxio/gitcrow/app/server"
 	"github.com/taxio/gitcrow/domain/service"
 	"github.com/volatiletech/sqlboiler/boil"
-	"log"
 )
 
 func run() error {

@@ -2,11 +2,12 @@ package infra
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
-	"io/ioutil"
-	"path/filepath"
 )
 
 type userStoreImpl struct {

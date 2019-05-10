@@ -2,11 +2,12 @@ package infra
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/grpclog"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/grpclog"
 )
 
 var ErrInvalidFilePath = errors.New("invalid file path")
