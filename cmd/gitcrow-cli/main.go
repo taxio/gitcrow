@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/k0kubun/pp"
+	"github.com/rakyll/statik/fs"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
+	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 )
 
 const version = "v0.0.1a1"
@@ -16,7 +19,7 @@ const version = "v0.0.1a1"
 func main() {
 	err := run()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%+v\n", err)
 	}
 }
 
@@ -94,8 +97,27 @@ func loadConfig() (*Config, error) {
 }
 
 func createConfigFile(filename string) error {
-	// TODO: load template
-	// TODO: create config file from template
-	// TODO: print message
-	return nil
+	// load template
+	statikFS, err := fs.New()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	cfgTpl, err := statikFS.Open("/gitcrow.toml.tmpl")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer cfgTpl.Close()
+	b, err := ioutil.ReadAll(cfgTpl)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	fmt.Println(string(b))
+
+	// create config file from template
+	err = ioutil.WriteFile(filename, b, 0666)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return errors.Errorf("Input your information to %s\n", filename)
 }
