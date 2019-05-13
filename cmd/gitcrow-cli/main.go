@@ -7,14 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/rakyll/statik/fs"
-
 	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/viper"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 )
 
 const version = "v0.0.1a1"
+const configFileName = "gitcrow.toml"
 
 func main() {
 	err := run()
@@ -80,7 +81,7 @@ func loadConfig() (*Config, error) {
 		}
 	}
 
-	configFile := filepath.Join(configDir, "gitcrow.toml")
+	configFile := filepath.Join(configDir, configFileName)
 	_, err = os.Stat(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -93,7 +94,26 @@ func loadConfig() (*Config, error) {
 		}
 	}
 
-	return nil, nil
+	// read config file
+	v := viper.New()
+	v.SetConfigType("toml")
+	v.SetConfigName("gitcrow")
+	v.AddConfigPath(configDir)
+	err = v.ReadInConfig()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	var cfg Config
+	err = v.Unmarshal(&cfg)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if len(cfg.Username) == 0 || len(cfg.GitHubAccessToken) == 0 {
+		return nil, errors.Errorf("Input yout information to %s\n", configFile)
+	}
+
+	return &cfg, nil
 }
 
 func createConfigFile(filename string) error {
