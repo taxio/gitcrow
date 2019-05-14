@@ -14,6 +14,7 @@ import (
 	_ "github.com/izumin5210/grapi/cmd/grapi-gen-scaffold-service"
 	_ "github.com/izumin5210/grapi/cmd/grapi-gen-service"
 	_ "github.com/izumin5210/grapi/cmd/grapi-gen-type"
+	_ "github.com/rakyll/statik"
 	_ "github.com/spf13/cobra"
 	_ "github.com/volatiletech/sqlboiler"
 )
