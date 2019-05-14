@@ -7,9 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/rakyll/statik/fs"
-
 	"github.com/pkg/errors"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/viper"
 )
 
