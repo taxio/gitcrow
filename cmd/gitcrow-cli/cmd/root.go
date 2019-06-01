@@ -27,6 +27,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.Flags().BoolP("version", "v", false, "show version")
 	rootCmd.Flags().Bool("verbose", false, "show debug log")
+	rootCmd.Flags().BoolP("ping", "p", false, "send a ping to the server")
 }
 
 func Execute() error {
