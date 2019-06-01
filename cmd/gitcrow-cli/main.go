@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/k0kubun/pp"
+	"github.com/taxio/gitcrow/cmd/gitcrow-cli/cmd"
+
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/cmd/gitcrow-cli/config"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
@@ -15,20 +16,21 @@ const version = "v0.0.1a1"
 const configFileName = "gitcrow.toml"
 
 func main() {
-	err := run()
+	err := cmd.Execute()
 	if err != nil {
 		log.Fatalf("%+v\n", err)
 	}
+	os.Exit(0)
 }
 
 func run() error {
-	fmt.Printf("GitCrow CLI %s\n", version)
-
-	cfg, err := loadConfig()
-	if err != nil {
-		return err
-	}
-	pp.Println(cfg)
+	//fmt.Printf("GitCrow CLI %s\n", version)
+	//
+	//cfg, err := loadConfig()
+	//if err != nil {
+	//	return err
+	//}
+	//pp.Println(cfg)
 
 	return nil
 }
