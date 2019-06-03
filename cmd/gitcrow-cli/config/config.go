@@ -1,16 +1,21 @@
 package config
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"text/template"
 
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/afero"
+	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 	"golang.org/x/xerrors"
 )
 
 var (
-	ErrConfigDirNotExists = xerrors.New("config directory not exists")
+	ErrConfigDirNotExists      = xerrors.New("config directory not exists")
+	ErrConfigFileAlreadyExists = xerrors.New("config file already exists")
 )
 
 type Config struct {
@@ -67,7 +72,58 @@ func (c *managerImpl) ConfigDirExists() (bool, error) {
 	return ext, nil
 }
 
-func (c *managerImpl) GenerateFromTemplate(host, username, token string) error {
+func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err error) {
+	ext, err := c.Exists()
+	if err != nil {
+		return err
+	}
+	if ext {
+		return ErrConfigFileAlreadyExists
+	}
+
+	cfgData := Config{
+		ServerHost:        host,
+		Username:          username,
+		GitHubAccessToken: token,
+	}
+	log.Println(cfgData)
+
+	// get template from statik
+	statikFs, err := fs.New()
+	if err != nil {
+		return err
+	}
+	tplFile, err := statikFs.Open("/gitcrow.toml.tmpl")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cErr := tplFile.Close(); err == nil {
+			err = cErr
+		}
+	}()
+	b, err := ioutil.ReadAll(tplFile)
+	tplStr := string(b)
+
+	// generate config file from template
+	// panic when cannot parse template
+	tpl := template.Must(template.New("config").Parse(tplStr))
+	if err != nil {
+		return err
+	}
+	appConfigFilePath, err := c.getConfigFilePath()
+	if err != nil {
+		return err
+	}
+	cfgFile, err := c.fs.Create(appConfigFilePath)
+	if err != nil {
+		return err
+	}
+	err = tpl.Execute(cfgFile, cfgData)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
