@@ -26,12 +26,11 @@ type Manager interface {
 }
 
 func NewManager(fs afero.Fs) Manager {
-	return &managerImpl{fs: fs, af: afero.Afero{Fs: fs}}
+	return &managerImpl{fs: fs}
 }
 
 type managerImpl struct {
 	fs afero.Fs
-	af afero.Afero
 }
 
 func (c *managerImpl) Exists() (bool, error) {
@@ -47,7 +46,8 @@ func (c *managerImpl) ConfigFileExists() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	ext, err := c.af.Exists(configFilePath)
+	af := afero.Afero{Fs: c.fs}
+	ext, err := af.Exists(configFilePath)
 	if err != nil {
 		return false, err
 	}
@@ -59,7 +59,8 @@ func (c *managerImpl) ConfigDirExists() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	ext, err := c.af.DirExists(configBaseDir)
+	af := afero.Afero{Fs: c.fs}
+	ext, err := af.DirExists(configBaseDir)
 	if err != nil {
 		return false, err
 	}
