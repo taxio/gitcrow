@@ -1,158 +1,107 @@
 package config
 
 import (
-	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/pkg/errors"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/viper"
+	"github.com/spf13/afero"
+	"golang.org/x/xerrors"
+)
+
+var (
+	ErrConfigDirNotExists = xerrors.New("config directory not exists")
 )
 
 type Config struct {
+	ServerHost        string
 	Username          string
 	GitHubAccessToken string
 }
 
-var (
-	ErrAppConfigValidation = errors.New("input your information to config")
-	ErrAppConfigNotExists  = errors.New("app config is not exists")
-)
-
-const (
-	appName            = "gitcrow"
-	appConfigName      = "gitcrow.toml"
-	configTemplatePath = "/gitcrow.toml.tmpl"
-)
-
-func Load() (*Config, error) {
-	configFilePath, err := getConfigPath()
-	if err != nil {
-		return nil, err
-	}
-	err = existsConfig(configFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	configHome, _ := filepath.Split(configFilePath)
-
-	// read config
-	var cfg *Config
-	v := viper.New()
-	v.SetConfigType("toml")
-	v.SetConfigName(appName)
-	v.AddConfigPath(configHome)
-	err = v.ReadInConfig()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	err = v.Unmarshal(&cfg)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	// validate config
-	err = validateConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
+type Manager interface {
+	Exists() (bool, error)
+	GenerateFromTemplate(host, username, token string) error
+	Load() (*Config, error)
 }
 
-func CreateConfigFile() (string, error) {
-	configFilePath, err := getConfigPath()
+func NewManager(fs afero.Fs) Manager {
+	return &managerImpl{fs: fs, af: afero.Afero{Fs: fs}}
+}
+
+type managerImpl struct {
+	fs afero.Fs
+	af afero.Afero
+}
+
+func (c *managerImpl) Exists() (bool, error) {
+	ext, err := c.ConfigFileExists()
+	if err != nil {
+		return false, err
+	}
+	return ext, nil
+}
+
+func (c *managerImpl) ConfigFileExists() (bool, error) {
+	configFilePath, err := c.getConfigFilePath()
+	if err != nil {
+		return false, err
+	}
+	ext, err := c.af.Exists(configFilePath)
+	if err != nil {
+		return false, err
+	}
+	return ext, nil
+}
+
+func (c *managerImpl) ConfigDirExists() (bool, error) {
+	configBaseDir, err := c.getConfigDirPath()
+	if err != nil {
+		return false, err
+	}
+	ext, err := c.af.DirExists(configBaseDir)
+	if err != nil {
+		return false, err
+	}
+	return ext, nil
+}
+
+func (c *managerImpl) GenerateFromTemplate(host, username, token string) error {
+	return nil
+}
+
+func (c *managerImpl) Load() (*Config, error) {
+	return &Config{}, nil
+}
+
+func (c *managerImpl) getConfigFilePath() (string, error) {
+	appConfigDirPath, err := c.getAppConfigDirPath()
 	if err != nil {
 		return "", err
 	}
-	configFilePath = filepath.Clean(configFilePath)
-	ss := strings.Split(configFilePath, string(os.PathSeparator))
-	p := "/"
-	for _, s := range ss[1 : len(ss)-1] {
-		p = filepath.Join(p, s)
-		_, err := os.Stat(p)
-		if err != nil {
-			if os.IsNotExist(err) {
-				err = os.Mkdir(p, 0755)
-				if err != nil {
-					return "", errors.WithStack(err)
-				}
-				fmt.Printf("mkdir %s\n", p)
-			} else {
-				return "", errors.WithStack(err)
-			}
-		}
-	}
-
-	_, err = os.Stat(configFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = createConfigFile(configFilePath)
-		} else {
-			return "", errors.WithStack(err)
-		}
-	}
-
+	configFilePath := filepath.Join(appConfigDirPath, "config.toml")
 	return configFilePath, nil
 }
 
-func createConfigFile(configFilePath string) error {
-	// load template
-	statikFS, err := fs.New()
+func (c *managerImpl) getAppConfigDirPath() (string, error) {
+	configBaseDir, err := c.getConfigDirPath()
 	if err != nil {
-		return errors.WithStack(err)
+		return "", err
 	}
-	cfgTpl, err := statikFS.Open(configTemplatePath)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer cfgTpl.Close()
-	b, err := ioutil.ReadAll(cfgTpl)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// create config file from template
-	err = ioutil.WriteFile(configFilePath, b, 0755)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	fmt.Printf("create %s\n", configFilePath)
-
-	return nil
+	appConfigDirPath := filepath.Join(configBaseDir, "gitcrow")
+	return appConfigDirPath, nil
 }
 
-func getConfigPath() (string, error) {
-	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
-	if len(xdgConfigHome) == 0 {
-		xdgConfigHome = filepath.Join(os.Getenv("HOME"), ".config")
-	}
-	appConfigHome := filepath.Join(xdgConfigHome, appName)
-	appConfigFilePath := filepath.Join(appConfigHome, appConfigName)
-	return appConfigFilePath, nil
-}
-
-func existsConfig(cfgFilePath string) error {
-	_, err := os.Stat(cfgFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.WithStack(ErrAppConfigNotExists)
-		} else {
-			return errors.WithStack(err)
+func (c *managerImpl) getConfigDirPath() (string, error) {
+	configBaseDir := os.Getenv("XDG_CONFIG_HOME")
+	if len(configBaseDir) == 0 {
+		log.Println("XDG_CONFIG_HOME not found, use HOME instead.")
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
 		}
+		configBaseDir = filepath.Join(homedir, ".config")
 	}
 
-	return nil
-}
-
-// TODO: fix for handling
-func validateConfig(cfg *Config) error {
-	if len(cfg.Username) == 0 || len(cfg.GitHubAccessToken) == 0 {
-		return ErrAppConfigValidation
-	}
-	return nil
+	return configBaseDir, nil
 }
