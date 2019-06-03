@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/afero"
+	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 )
 
 func TestNewManager(t *testing.T) {
@@ -91,5 +92,52 @@ func TestManagerImpl_GenerateFromTemplate(t *testing.T) {
 	}
 	if !ext {
 		t.Fatal("config file has not been created")
+	}
+}
+
+func TestManagerImpl_Load(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    *Config
+		wantErr bool
+	}{
+		{
+			name: "no value",
+			want: &Config{
+				ServerHost:        "",
+				Username:          "",
+				GitHubAccessToken: "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "normal",
+			want: &Config{
+				ServerHost:        "localhost",
+				Username:          "foo",
+				GitHubAccessToken: "hoge",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &managerImpl{
+				fs: afero.NewMemMapFs(),
+			}
+			err := c.GenerateFromTemplate(tt.want.ServerHost, tt.want.Username, tt.want.GitHubAccessToken)
+			if err != nil {
+				t.Errorf("GenerateFromTemplate() error = %+v\n", err)
+				return
+			}
+			got, err := c.Load()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Load() error = %+v, wantErr %+v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Load() = %+v, want %+v", got, tt.want)
+			}
+		})
 	}
 }
