@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+
+	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 )
 
 type Config struct {

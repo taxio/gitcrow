@@ -3,6 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/app/di"
@@ -10,10 +15,6 @@ import (
 	"github.com/taxio/gitcrow/domain/repository"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc/grpclog"
-	"io/ioutil"
-	"net/http"
-	"sync"
-	"time"
 )
 
 var (

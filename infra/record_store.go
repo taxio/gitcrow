@@ -3,6 +3,8 @@ package infra
 import (
 	"context"
 	"database/sql"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/taxio/gitcrow/domain/model"
 	"github.com/taxio/gitcrow/domain/repository"
@@ -10,7 +12,6 @@ import (
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"strings"
 )
 
 type recordStoreImpl struct {
