@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	ErrConfigDirNotExists      = xerrors.New("config directory not exists")
 	ErrConfigFileAlreadyExists = xerrors.New("config file already exists")
 )
 
@@ -92,7 +91,7 @@ func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err er
 	if err != nil {
 		return err
 	}
-	tplFile, err := statikFs.Open("/gitcrow.toml.tmpl")
+	tplFile, err := statikFs.Open("/config.toml.tmpl")
 	if err != nil {
 		return err
 	}
