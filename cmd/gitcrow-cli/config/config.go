@@ -2,13 +2,13 @@ package config
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/afero"
+	"github.com/spf13/viper"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 	"golang.org/x/xerrors"
 )
@@ -86,7 +86,6 @@ func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err er
 		Username:          username,
 		GitHubAccessToken: token,
 	}
-	log.Println(cfgData)
 
 	// get template from statik
 	statikFs, err := fs.New()
@@ -128,7 +127,26 @@ func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err er
 }
 
 func (c *managerImpl) Load() (*Config, error) {
-	return &Config{}, nil
+	appConfigPath, err := c.getConfigFilePath()
+	if err != nil {
+		return nil, xerrors.Errorf("getAppConfigDirPath: %v", err)
+	}
+
+	v := viper.New()
+	v.SetFs(c.fs)
+	v.SetConfigType("toml")
+	v.SetConfigFile(appConfigPath)
+	err = v.ReadInConfig()
+	if err != nil {
+		return nil, xerrors.Errorf("viper.ReadInConfig: %v", err)
+	}
+	var cfg *Config
+	err = v.Unmarshal(&cfg)
+	if err != nil {
+		return nil, xerrors.Errorf("viper.Unmarshal: %v", err)
+	}
+
+	return cfg, nil
 }
 
 func (c *managerImpl) getConfigFilePath() (string, error) {
@@ -152,7 +170,7 @@ func (c *managerImpl) getAppConfigDirPath() (string, error) {
 func (c *managerImpl) getConfigDirPath() (string, error) {
 	configBaseDir := os.Getenv("XDG_CONFIG_HOME")
 	if len(configBaseDir) == 0 {
-		log.Println("XDG_CONFIG_HOME not found, use HOME instead.")
+		//log.Println("XDG_CONFIG_HOME not found, use HOME instead.")
 		homedir, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
