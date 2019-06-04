@@ -6,10 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/xerrors"
-
 	"github.com/spf13/afero"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
+	"golang.org/x/xerrors"
 )
 
 func TestNewManager(t *testing.T) {
