@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/rakyll/statik/fs"
-	"github.com/shurcooL/go/ioutil"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/cmd/gitcrow-cli/config"
@@ -79,12 +79,14 @@ func (m *downloadManagerImpl) GenerateCsv() error {
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
+	tplData, err := ioutil.ReadAll(tplFile)
+	af := afero.Afero{Fs: m.fs}
 	wd, err := os.Getwd()
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
 	filePath := filepath.Join(wd, "download.csv")
-	err = ioutil.WriteFile(filePath, tplFile)
+	err = af.WriteFile(filePath, tplData, 0744)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
 	}
