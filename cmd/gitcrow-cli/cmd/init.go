@@ -15,15 +15,15 @@ var initCmd = &cobra.Command{
 	Short: "initialize gitcrow configuration",
 	Long:  `initialize gitcrow configuration`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hostServer, err := cmd.Flags().GetString("h")
+		hostServer, err := cmd.Flags().GetString("host-server")
 		if err != nil {
 			return err
 		}
-		username, err := cmd.Flags().GetString("u")
+		username, err := cmd.Flags().GetString("username")
 		if err != nil {
 			return err
 		}
-		githubAccessToken, err := cmd.Flags().GetString("t")
+		githubAccessToken, err := cmd.Flags().GetString("github-access-token")
 		if err != nil {
 			return err
 		}
