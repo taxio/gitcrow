@@ -120,6 +120,9 @@ func (m *downloadManagerImpl) readCsv(csvPath string) ([][]string, error) {
 }
 
 func (m *downloadManagerImpl) parseCsv(csvData [][]string) ([]DownloadRequestRepo, error) {
+	if csvData == nil {
+		return nil, xerrors.New("csv validation error. csv data is nil.")
+	}
 	repos := make([]DownloadRequestRepo, 0, len(csvData))
 	for _, rec := range csvData {
 		if len(rec) != 3 {
