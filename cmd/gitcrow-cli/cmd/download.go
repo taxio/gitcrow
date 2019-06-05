@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -94,16 +97,86 @@ func (m *downloadManagerImpl) GenerateCsv() error {
 	return nil
 }
 
-func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath string) error {
-	fmt.Println("send request")
-	fmt.Printf("csv file path: %s\n", csvPath)
+func (m *downloadManagerImpl) readCsv(csvPath string) ([][]string, error) {
 	if filepath.IsAbs(csvPath) {
 		wd, err := os.Getwd()
 		if err != nil {
-			return xerrors.Errorf("os.Getwd(): %v", err)
+			return nil, xerrors.Errorf("os.Getwd(): %v", err)
 		}
 		csvPath = filepath.Join(wd, csvPath)
 		csvPath = filepath.Clean(csvPath)
 	}
+	file, err := m.fs.Open(csvPath)
+	if err != nil {
+		return nil, xerrors.Errorf(": %w", err)
+	}
+	reader := csv.NewReader(file)
+	recs, err := reader.ReadAll()
+	if err != nil {
+		return nil, xerrors.Errorf(": %w", err)
+	}
+
+	return recs, nil
+}
+
+func (m *downloadManagerImpl) parseCsv(csvData [][]string) ([]DownloadRequestRepo, error) {
+	repos := make([]DownloadRequestRepo, 0, len(csvData))
+	for _, rec := range csvData {
+		if len(rec) != 3 {
+			return nil, xerrors.New("csv validation error. number of columns != 3")
+		}
+		repos = append(repos, DownloadRequestRepo{
+			Owner: rec[0],
+			Repo:  rec[1],
+			Tag:   rec[2],
+		})
+	}
+
+	return repos, nil
+}
+
+func (m *downloadManagerImpl) send(data DownloadRequest, host string) (*http.Response, error) {
+	return nil, nil
+}
+
+func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath string) error {
+	log.Println("send request")
+	log.Printf("csv file path: %s\n", csvPath)
+
+	csvData, err := m.readCsv(csvPath)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	repos, err := m.parseCsv(csvData)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
+	data := DownloadRequest{
+		Username:    cfg.Username,
+		AccessToken: cfg.GitHubAccessToken,
+		ProjectName: "",
+		Repos:       repos,
+	}
+
+	_, err = m.send(data, cfg.ServerHost)
+	if err != nil {
+		return xerrors.Errorf(": %w", err)
+	}
+
 	return nil
+}
+
+type DownloadRequest struct {
+	Username    string                `json:"username"`
+	AccessToken string                `json:"access_token"`
+	ProjectName string                `json:"project_name"`
+	Repos       []DownloadRequestRepo `json:"repos"`
+}
+
+type DownloadRequestRepo struct {
+	Owner string `json:"owner"`
+	Repo  string `json:"repo"`
+	Tag   string `json:"tag"`
 }
