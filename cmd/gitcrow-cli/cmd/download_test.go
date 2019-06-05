@@ -7,8 +7,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/jarcoal/httpmock"
+
 	"github.com/spf13/afero"
-	"github.com/taxio/gitcrow/cmd/gitcrow-cli/config"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
 )
 
@@ -76,48 +77,6 @@ func Test_downloadManagerImpl_GenerateCsv(t *testing.T) {
 	want := "owner,repository,tag"
 	if got != want {
 		t.Fatalf("generated csv is not correct. want: %s, got: %s", want, got)
-	}
-}
-
-func Test_downloadManagerImpl_SendRequest(t *testing.T) {
-	type fields struct {
-		fs afero.Fs
-	}
-	type args struct {
-		cfg     *config.Config
-		csvPath string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "",
-			fields: fields{
-				fs: afero.NewMemMapFs(),
-			},
-			args: args{
-				cfg: &config.Config{
-					ServerHost:        "",
-					Username:          "",
-					GitHubAccessToken: "",
-				},
-				csvPath: "",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &downloadManagerImpl{
-				fs: tt.fields.fs,
-			}
-			if err := m.SendRequest(tt.args.cfg, tt.args.csvPath); (err != nil) != tt.wantErr {
-				t.Errorf("downloadManagerImpl.SendRequest() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
 	}
 }
 
@@ -231,6 +190,10 @@ func Test_downloadManagerImpl_parseCsv(t *testing.T) {
 }
 
 func Test_downloadManagerImpl_send(t *testing.T) {
+	// for mock http request(RoundTripper)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
 	type fields struct {
 		fs afero.Fs
 	}
