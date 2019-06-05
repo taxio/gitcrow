@@ -122,35 +122,35 @@ func Test_downloadManagerImpl_SendRequest(t *testing.T) {
 }
 
 func Test_downloadManagerImpl_readCsv(t *testing.T) {
-	type fields struct {
-		fs afero.Fs
+	dm := downloadManagerImpl{fs: afero.NewMemMapFs()}
+
+	// no csv case
+	_, err := dm.readCsv("download.csv")
+	if err == nil {
+		t.Fatalf("readCsv must return error when there is no csv")
 	}
-	type args struct {
-		csvPath string
+
+	// generate csv
+	err = dm.GenerateCsv()
+	if err != nil {
+		t.Fatalf("dm.GenerateCsv() return error: %+v\n", err)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    [][]string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+
+	// read from relative path
+	_, err = dm.readCsv("download.csv")
+	if err != nil {
+		t.Fatalf("dm.readCsv() from relative path return error: %+v\n", err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &downloadManagerImpl{
-				fs: tt.fields.fs,
-			}
-			got, err := m.readCsv(tt.args.csvPath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("downloadManagerImpl.readCsv() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("downloadManagerImpl.readCsv() = %v, want %v", got, tt.want)
-			}
-		})
+
+	// read from absolute path
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd() return error: %+v\n", err)
+	}
+	p := filepath.Join(wd, "download.csv")
+	_, err = dm.readCsv(p)
+	if err != nil {
+		t.Fatalf("dm.readCsv() from absolute path return error: %+v\n", err)
 	}
 }
 

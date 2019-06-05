@@ -98,7 +98,7 @@ func (m *downloadManagerImpl) GenerateCsv() error {
 }
 
 func (m *downloadManagerImpl) readCsv(csvPath string) ([][]string, error) {
-	if filepath.IsAbs(csvPath) {
+	if !filepath.IsAbs(csvPath) {
 		wd, err := os.Getwd()
 		if err != nil {
 			return nil, xerrors.Errorf("os.Getwd(): %v", err)
