@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/jarcoal/httpmock"
 
 	"github.com/spf13/afero"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
@@ -189,40 +186,48 @@ func Test_downloadManagerImpl_parseCsv(t *testing.T) {
 	}
 }
 
-func Test_downloadManagerImpl_send(t *testing.T) {
-	// for mock http request(RoundTripper)
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	type fields struct {
-		fs afero.Fs
-	}
-	type args struct {
-		data DownloadRequest
-		host string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *http.Response
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &downloadManagerImpl{
-				fs: tt.fields.fs,
-			}
-			got, err := m.send(tt.args.data, tt.args.host)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("downloadManagerImpl.send() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("downloadManagerImpl.send() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func Test_downloadManagerImpl_send(t *testing.T) {
+//	// for mock http request(RoundTripper)
+//	httpmock.Activate()
+//	defer httpmock.DeactivateAndReset()
+//
+//	dm := downloadManagerImpl{fs: afero.NewMemMapFs()}
+//
+//	type args struct {
+//		data DownloadRequest
+//		host string
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		want    *http.Response
+//		wantErr bool
+//	}{
+//		{
+//			name: "",
+//			args: args{
+//				data: DownloadRequest{
+//					Username:    "",
+//					AccessToken: "",
+//					ProjectName: "",
+//					Repos:       nil,
+//				},
+//				host: "",
+//			},
+//			want:    nil,
+//			wantErr: false,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			got, err := dm.send(tt.args.data, tt.args.host)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("downloadManagerImpl.send() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if !reflect.DeepEqual(got, tt.want) {
+//				t.Errorf("downloadManagerImpl.send() = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}

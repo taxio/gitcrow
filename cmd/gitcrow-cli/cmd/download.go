@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -19,7 +21,7 @@ import (
 
 // downloadCmd represents the download command
 var downloadCmd = &cobra.Command{
-	Use:   "download [csv_path]",
+	Use:   "download [csv_path] [project_name]",
 	Short: "Request repositories download",
 	Long:  `Request repositories download`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,11 +45,12 @@ var downloadCmd = &cobra.Command{
 			return xerrors.Errorf("cm.Load(): %w", err)
 		}
 
-		if len(args) != 1 {
+		if len(args) != 2 {
 			return xerrors.New("Argument not correct")
 		}
 		csvPath := args[0]
-		err = dm.SendRequest(cfg, csvPath)
+		projName := args[1]
+		err = dm.SendRequest(cfg, csvPath, projName)
 
 		return nil
 	},
@@ -61,7 +64,7 @@ func init() {
 
 type DownloadManager interface {
 	GenerateCsv() error
-	SendRequest(cfg *config.Config, csvPath string) error
+	SendRequest(cfg *config.Config, csvPath, projName string) error
 }
 
 func NewDownloadManager(fs afero.Fs) DownloadManager {
@@ -139,10 +142,18 @@ func (m *downloadManagerImpl) parseCsv(csvData [][]string) ([]DownloadRequestRep
 }
 
 func (m *downloadManagerImpl) send(data DownloadRequest, host string) (*http.Response, error) {
-	return nil, nil
+	j, err := json.Marshal(data)
+	if err != nil {
+		return nil, xerrors.Errorf(": %w", err)
+	}
+	res, err := http.Post(fmt.Sprintf("%s/donwload", host), "application/json", bytes.NewBuffer(j))
+	if err != nil {
+		return nil, xerrors.Errorf(": %w", err)
+	}
+	return res, nil
 }
 
-func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath string) error {
+func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath, projName string) error {
 	log.Println("send request")
 	log.Printf("csv file path: %s\n", csvPath)
 
@@ -159,13 +170,18 @@ func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath string) er
 	data := DownloadRequest{
 		Username:    cfg.Username,
 		AccessToken: cfg.GitHubAccessToken,
-		ProjectName: "",
+		ProjectName: projName,
 		Repos:       repos,
 	}
 
-	_, err = m.send(data, cfg.ServerHost)
+	res, err := m.send(data, cfg.ServerHost)
 	if err != nil {
 		return xerrors.Errorf(": %w", err)
+	}
+	if res.StatusCode >= http.StatusInternalServerError {
+		return xerrors.New("server internal error")
+	} else if res.StatusCode >= http.StatusBadRequest {
+		return xerrors.New("bad request")
 	}
 
 	return nil
