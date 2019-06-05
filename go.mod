@@ -8,6 +8,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5
 	github.com/izumin5210/grapi v0.4.0
+	github.com/jarcoal/httpmock v1.0.4 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/lib/pq v1.1.1

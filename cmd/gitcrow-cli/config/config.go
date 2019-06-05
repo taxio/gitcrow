@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	ErrConfigDirNotExists      = xerrors.New("config directory not exists")
 	ErrConfigFileAlreadyExists = xerrors.New("config file already exists")
 )
 
@@ -41,7 +40,7 @@ type managerImpl struct {
 func (c *managerImpl) Exists() (bool, error) {
 	ext, err := c.ConfigFileExists()
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf(": %w", err)
 	}
 	return ext, nil
 }
@@ -49,12 +48,12 @@ func (c *managerImpl) Exists() (bool, error) {
 func (c *managerImpl) ConfigFileExists() (bool, error) {
 	configFilePath, err := c.getConfigFilePath()
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf(": %w", err)
 	}
 	af := afero.Afero{Fs: c.fs}
 	ext, err := af.Exists(configFilePath)
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf(": %w", err)
 	}
 	return ext, nil
 }
@@ -62,12 +61,12 @@ func (c *managerImpl) ConfigFileExists() (bool, error) {
 func (c *managerImpl) ConfigDirExists() (bool, error) {
 	configBaseDir, err := c.getConfigDirPath()
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf(": %w", err)
 	}
 	af := afero.Afero{Fs: c.fs}
 	ext, err := af.DirExists(configBaseDir)
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf(": %w", err)
 	}
 	return ext, nil
 }
@@ -75,10 +74,10 @@ func (c *managerImpl) ConfigDirExists() (bool, error) {
 func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err error) {
 	ext, err := c.Exists()
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 	if ext {
-		return ErrConfigFileAlreadyExists
+		return xerrors.Errorf(": %w", ErrConfigFileAlreadyExists)
 	}
 
 	cfgData := Config{
@@ -90,15 +89,15 @@ func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err er
 	// get template from statik
 	statikFs, err := fs.New()
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
-	tplFile, err := statikFs.Open("/gitcrow.toml.tmpl")
+	tplFile, err := statikFs.Open("/config.toml.tmpl")
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 	defer func() {
 		if cErr := tplFile.Close(); err == nil {
-			err = cErr
+			err = xerrors.Errorf(": %w", cErr)
 		}
 	}()
 	b, err := ioutil.ReadAll(tplFile)
@@ -108,19 +107,19 @@ func (c *managerImpl) GenerateFromTemplate(host, username, token string) (err er
 	// panic when cannot parse template
 	tpl := template.Must(template.New("config").Parse(tplStr))
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 	appConfigFilePath, err := c.getConfigFilePath()
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 	cfgFile, err := c.fs.Create(appConfigFilePath)
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 	err = tpl.Execute(cfgFile, cfgData)
 	if err != nil {
-		return err
+		return xerrors.Errorf(": %w", err)
 	}
 
 	return nil
@@ -152,7 +151,7 @@ func (c *managerImpl) Load() (*Config, error) {
 func (c *managerImpl) getConfigFilePath() (string, error) {
 	appConfigDirPath, err := c.getAppConfigDirPath()
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf(": %w", err)
 	}
 	configFilePath := filepath.Join(appConfigDirPath, "config.toml")
 	return configFilePath, nil
@@ -161,7 +160,7 @@ func (c *managerImpl) getConfigFilePath() (string, error) {
 func (c *managerImpl) getAppConfigDirPath() (string, error) {
 	configBaseDir, err := c.getConfigDirPath()
 	if err != nil {
-		return "", err
+		return "", xerrors.Errorf(": %w", err)
 	}
 	appConfigDirPath := filepath.Join(configBaseDir, "gitcrow")
 	return appConfigDirPath, nil
@@ -173,7 +172,7 @@ func (c *managerImpl) getConfigDirPath() (string, error) {
 		//log.Println("XDG_CONFIG_HOME not found, use HOME instead.")
 		homedir, err := os.UserHomeDir()
 		if err != nil {
-			return "", err
+			return "", xerrors.Errorf(": %w", err)
 		}
 		configBaseDir = filepath.Join(homedir, ".config")
 	}

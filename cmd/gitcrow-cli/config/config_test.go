@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/afero"
 	_ "github.com/taxio/gitcrow/cmd/gitcrow-cli/statik"
+	"golang.org/x/xerrors"
 )
 
 func TestNewManager(t *testing.T) {
@@ -92,6 +93,14 @@ func TestManagerImpl_GenerateFromTemplate(t *testing.T) {
 	}
 	if !ext {
 		t.Fatal("config file has not been created")
+	}
+
+	err = cm.GenerateFromTemplate("", "", "")
+	if err == nil {
+		t.Fatal("2nd cm.GenerateFromTemplate must return error")
+	}
+	if !xerrors.Is(err, ErrConfigFileAlreadyExists) {
+		t.Fatalf("2nd cm.GenerateFromTemplate returns not expected error: %+v, want: %+v", err, ErrConfigFileAlreadyExists)
 	}
 }
 
