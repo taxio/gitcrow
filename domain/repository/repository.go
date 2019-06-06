@@ -16,7 +16,6 @@ type RecordStore interface {
 	Exists(ctx context.Context, repo *model.GitRepo) (bool, error)
 	Insert(ctx context.Context, repo *model.GitRepo) error
 	Sync(ctx context.Context, repos []*model.GitRepo) error
-	GetSlackId(ctx context.Context, username string) (string, bool, error)
 }
 
 type UserStore interface {

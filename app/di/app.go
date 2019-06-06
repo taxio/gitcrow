@@ -3,12 +3,10 @@ package di
 import (
 	"database/sql"
 
-	"github.com/taxio/gitcrow/infra"
-
+	_ "github.com/lib/pq"
 	"github.com/taxio/gitcrow/app/config"
 	"github.com/taxio/gitcrow/domain/repository"
-
-	_ "github.com/lib/pq"
+	"github.com/taxio/gitcrow/infra"
 )
 
 type AppComponent interface {
@@ -48,10 +46,10 @@ func (c *appComponentImpl) RecordStore() repository.RecordStore {
 
 func (c *appComponentImpl) ReportStore() repository.ReportStore {
 	return infra.NewReportStore(
-		c.config.SlackWebHookURL,
-		c.config.SlackReportChannel,
-		c.config.SlackBotName,
-		c.config.SlackBotIcon,
+		c.config.Xhook.Url,
+		c.config.Xhook.Channel,
+		c.config.Xhook.BotName,
+		c.config.Xhook.BotIcon,
 		c.config.BaseDir,
 	)
 }
