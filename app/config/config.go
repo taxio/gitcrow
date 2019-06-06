@@ -14,18 +14,20 @@ type Config struct {
 	BaseDir     string
 	CacheDir    string
 
-	// slack
-	SlackWebHookURL    string
-	SlackReportChannel string
-	SlackBotName       string
-	SlackBotIcon       string
+	// xhook
+	Xhook XhookConfig
+}
+
+type XhookConfig struct {
+	Url     string
+	Channel string
+	BotName string
+	BotIcon string
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	// ignore error for docker
+	_ = godotenv.Load()
 
 	databaseURL, err := getRequiredEnv("DATABASE_URL")
 	if err != nil {
@@ -47,20 +49,8 @@ func Load() (*Config, error) {
 		}
 	}
 
-	// slack configuration
-	slackWebHookURL, err := getRequiredEnv("SLACK_WEBHOOK_URL")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	slackReportChannel, err := getRequiredEnv("SLACK_REPORT_CHANNEL")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	slackBotName, err := getRequiredEnv("SLACK_BOT_NAME")
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	slackBotIcon, err := getRequiredEnv("SLACK_BOT_ICON")
+	// xhook configuration
+	xhookCfg, err := loadXhookConfig()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -69,20 +59,46 @@ func Load() (*Config, error) {
 		DatabaseURL: databaseURL,
 		BaseDir:     baseDir,
 		CacheDir:    cacheDir,
-
-		SlackWebHookURL:    slackWebHookURL,
-		SlackReportChannel: "#" + slackReportChannel,
-		SlackBotName:       slackBotName,
-		SlackBotIcon:       ":" + slackBotIcon + ":",
+		Xhook:       xhookCfg,
 	}
 
 	return config, nil
 }
 
+func loadXhookConfig() (XhookConfig, error) {
+	cfg := XhookConfig{}
+
+	xhookUrl, err := getRequiredEnv("XHOOK_URL")
+	if err != nil {
+		return cfg, errors.WithStack(err)
+	}
+	cfg.Url = xhookUrl
+
+	xhookChan, err := getRequiredEnv("XHOOK_CHANNEL")
+	if err != nil {
+		return cfg, errors.WithStack(err)
+	}
+	cfg.Channel = xhookChan
+
+	xhookBotName, err := getRequiredEnv("XHOOK_BOT_NAME")
+	if err != nil {
+		return cfg, errors.WithStack(err)
+	}
+	cfg.BotName = xhookBotName
+
+	xhookBotIcon, err := getRequiredEnv("XHOOK_BOT_ICON")
+	if err != nil {
+		return cfg, errors.WithStack(err)
+	}
+	cfg.BotIcon = xhookBotIcon
+
+	return cfg, nil
+}
+
 func getRequiredEnv(envName string) (string, error) {
 	env := os.Getenv(envName)
 	if len(env) == 0 {
-		return "", errors.New(fmt.Sprintf("[.env] %s is required", envName))
+		return "", errors.New(fmt.Sprintf("environment %s is required", envName))
 	}
 
 	return env, nil

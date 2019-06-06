@@ -170,14 +170,7 @@ func (s *downloadServiceImpl) runWorker(client *github.Client, username, project
 	}
 
 	// report to user
-	slackId, ok, err := s.recordStore.GetSlackId(ctx, username)
-	if err != nil {
-		grpclog.Errorf("%+v\n", err)
-	}
-	if !ok {
-		slackId = username
-	}
-	err = s.reportStore.Notify(ctx, slackId, "finish download worker")
+	err := s.reportStore.Notify(ctx, username, "finish download worker")
 	if err != nil {
 		grpclog.Errorf("%+v\n", err)
 	}

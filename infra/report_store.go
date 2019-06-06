@@ -1,12 +1,12 @@
 package infra
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,47 +18,53 @@ import (
 )
 
 type reportStoreImpl struct {
-	webHookURL string
-	channel    string
-	botName    string
-	botIcon    string
+	Url     string
+	channel string
+	botName string
+	botIcon string
 
 	baseDir string
 }
 
-func NewReportStore(webHookURL, channel, botName, botIcon, baseDir string) repository.ReportStore {
+func NewReportStore(url, channel, botName, botIcon, baseDir string) repository.ReportStore {
 	return &reportStoreImpl{
-		webHookURL: webHookURL,
-		channel:    channel,
-		botName:    botName,
-		botIcon:    botIcon,
-		baseDir:    baseDir,
+		Url:     url,
+		channel: channel,
+		botName: botName,
+		botIcon: botIcon,
+		baseDir: baseDir,
 	}
 }
 
-type slackData struct {
-	Text      string `json:"text"`
-	Username  string `json:"username"`
-	IconEmoji string `json:"icon_emoji"`
-	Channel   string `json:"channel"`
+type xhookRequest struct {
+	Channel  string   `json:"channel"`
+	Mentions []string `json:"mentions"`
+	Message  string   `json:"message"`
+	BotName  string   `json:"bot_name"`
+	BotIcon  string   `json:"bot_icon"`
 }
 
-func (s *reportStoreImpl) Notify(ctx context.Context, slackId, message string) error {
-	message = fmt.Sprintf("<@%s> %s", slackId, message)
-	data := slackData{
-		Text:      message,
-		Username:  s.botName,
-		IconEmoji: s.botIcon,
-		Channel:   s.channel,
+func (s *reportStoreImpl) Notify(ctx context.Context, username, message string) error {
+	data := xhookRequest{
+		Channel:  s.channel,
+		Mentions: []string{username},
+		Message:  message,
+		BotName:  s.botName,
+		BotIcon:  s.botIcon,
 	}
-	jsonParams, err := json.Marshal(data)
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	_, err = http.PostForm(s.webHookURL, url.Values{"payload": {string(jsonParams)}})
+	res, err := http.Post(s.Url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	if res.StatusCode >= http.StatusInternalServerError {
+		return errors.New("Server Internal Error")
+	} else if res.StatusCode >= http.StatusBadRequest {
+		return errors.New("Bad Request")
 	}
 
 	return nil
