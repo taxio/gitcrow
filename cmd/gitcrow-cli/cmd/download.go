@@ -126,8 +126,11 @@ func (m *downloadManagerImpl) parseCsv(csvData [][]string) ([]DownloadRequestRep
 	if csvData == nil {
 		return nil, xerrors.New("csv validation error. csv data is nil.")
 	}
+	if len(csvData) <= 1 {
+		return nil, xerrors.New("csv has no data.")
+	}
 	repos := make([]DownloadRequestRepo, 0, len(csvData))
-	for _, rec := range csvData {
+	for _, rec := range csvData[1:] {
 		if len(rec) != 3 {
 			return nil, xerrors.New("csv validation error. number of columns != 3")
 		}

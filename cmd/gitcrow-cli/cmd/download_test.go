@@ -150,12 +150,26 @@ func Test_downloadManagerImpl_parseCsv(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "validation error: no data",
+			fields: fields{
+				fs: afero.NewMemMapFs(),
+			},
+			args: args{
+				csvData: [][]string{
+					{"owner", "repo", "tag"},
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "normal",
 			fields: fields{
 				fs: afero.NewMemMapFs(),
 			},
 			args: args{
 				csvData: [][]string{
+					{"owner", "repo", "tag"},
 					{"taxio", "gitcrow", "v0.0.1"},
 					{"taxio2", "gitcrow2", "v0.0.2"},
 					{"taxio3", "gitcrow3", "v0.1.1"},
