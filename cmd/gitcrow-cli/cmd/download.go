@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"go.uber.org/zap"
 
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/afero"
@@ -157,8 +158,7 @@ func (m *downloadManagerImpl) send(data DownloadRequest, host string) (*http.Res
 }
 
 func (m *downloadManagerImpl) SendRequest(cfg *config.Config, csvPath, projName string) error {
-	log.Println("send request")
-	log.Printf("csv file path: %s\n", csvPath)
+	zap.L().Info("DownloadManager.SendRequest", zap.String("csv path", csvPath), zap.String("project Name", projName))
 
 	csvData, err := m.readCsv(csvPath)
 	if err != nil {

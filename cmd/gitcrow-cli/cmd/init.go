@@ -17,15 +17,15 @@ var initCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		hostServer, err := cmd.Flags().GetString("host-server")
 		if err != nil {
-			return err
+			return xerrors.Errorf(": %w", err)
 		}
 		username, err := cmd.Flags().GetString("username")
 		if err != nil {
-			return err
+			return xerrors.Errorf(": %w", err)
 		}
 		githubAccessToken, err := cmd.Flags().GetString("github-access-token")
 		if err != nil {
-			return err
+			return xerrors.Errorf(": %w", err)
 		}
 
 		fs := afero.NewOsFs()
@@ -34,7 +34,7 @@ var initCmd = &cobra.Command{
 		// check config existence
 		ext, err := cm.Exists()
 		if err != nil {
-			return xerrors.Errorf("cm.Exists: %v", err)
+			return xerrors.Errorf("cm.Exists: %w", err)
 		}
 		if ext {
 			fmt.Println("config file already exists")
@@ -42,7 +42,7 @@ var initCmd = &cobra.Command{
 		}
 		err = cm.GenerateFromTemplate(hostServer, username, githubAccessToken)
 		if err != nil {
-			return xerrors.Errorf("cm.GenerateFromTemplate: %v", err)
+			return xerrors.Errorf("cm.GenerateFromTemplate: %w", err)
 		}
 
 		return nil

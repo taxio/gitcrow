@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"go.uber.org/zap"
+
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
@@ -169,7 +171,7 @@ func (c *managerImpl) getAppConfigDirPath() (string, error) {
 func (c *managerImpl) getConfigDirPath() (string, error) {
 	configBaseDir := os.Getenv("XDG_CONFIG_HOME")
 	if len(configBaseDir) == 0 {
-		//log.Println("XDG_CONFIG_HOME not found, use HOME instead.")
+		zap.L().Info("XDG_CONFIG_HOME not found, use HOME instead.")
 		homedir, err := os.UserHomeDir()
 		if err != nil {
 			return "", xerrors.Errorf(": %w", err)
