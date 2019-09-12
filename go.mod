@@ -4,8 +4,10 @@ go 1.13
 
 require (
 	github.com/golang/protobuf v1.2.0
+	github.com/google/wire v0.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5
 	github.com/izumin5210/grapi v0.4.0
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/rakyll/statik v0.1.6
 	github.com/rogpeppe/go-internal v1.3.0 // indirect
