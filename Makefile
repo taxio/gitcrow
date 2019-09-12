@@ -28,5 +28,8 @@ prune:
 rm-gitcrow-dir:
 	rm -rf .gitcrow/
 
+build:
+	go build
+
 wire:
 	wire gen ./app/di

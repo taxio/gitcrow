@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/afero"
-	"github.com/taxio/gitcrow/db"
+	"github.com/taxio/gitcrow/pkg/record"
 )
 
 func InitProject(fs afero.Fs, projPath string) error {
@@ -15,7 +15,7 @@ func InitProject(fs afero.Fs, projPath string) error {
 
 	// create sqlite3 db
 	dbPath := filepath.Join(cfgPath, "db.sqlite3")
-	_, err = db.CreateDatabase(dbPath)
+	_, err = record.CreateDatabase(dbPath)
 	if err != nil {
 		return fmt.Errorf(": %w", err)
 	}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +13,7 @@ func NewConfigCmd() *cobra.Command {
 		Short: "show config",
 		Long:  "show config",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, _ = fmt.Fprintln(ctx.Out, "Not implemented yet.")
+			_, _ = fmt.Fprintln(os.Stdout, "Not implemented yet.")
 			return nil
 		},
 	}
