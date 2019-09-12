@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/taxio/gitcrow/log"
 	"github.com/taxio/gitcrow/pkg"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
@@ -29,10 +28,8 @@ func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
 				return err
 			}
 			if verbose {
-				err = initLogger()
-				if err != nil {
-					return err
-				}
+				log.L().SetVerbose(true)
+				log.L().Println("log configured")
 			}
 			return nil
 		},
@@ -51,15 +48,4 @@ func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
 	rootCmd.AddCommand(subCmds...)
 
 	return rootCmd
-}
-
-func initLogger() error {
-	zapCfg := zap.NewDevelopmentConfig()
-	zapCfg.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
-	zapLogger, err := zapCfg.Build()
-	if err != nil {
-		return err
-	}
-	zap.ReplaceGlobals(zapLogger)
-	return nil
 }

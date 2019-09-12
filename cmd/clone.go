@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/pkg"
+	"golang.org/x/xerrors"
 )
 
 func NewCloneCmd(ctx *pkg.AppContext) *cobra.Command {
@@ -13,7 +12,15 @@ func NewCloneCmd(ctx *pkg.AppContext) *cobra.Command {
 		Short: "clone repositories",
 		Long:  "clone repositories",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, _ = fmt.Fprintln(ctx.Out, "Not implemented yet.")
+			if len(args) != 1 {
+				return xerrors.New("argument incorrect")
+			}
+			repoPath := args[0]
+
+			err := pkg.CloneRepo(ctx, repoPath)
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}
