@@ -8,6 +8,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5
 	github.com/izumin5210/grapi v0.4.0
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/rakyll/statik v0.1.6
 	github.com/rogpeppe/go-internal v1.3.0 // indirect

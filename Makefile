@@ -25,3 +25,8 @@ image:
 prune:
 	@docker image prune
 
+rm-gitcrow-dir:
+	rm -rf .gitcrow/
+
+wire:
+	wire gen ./app/di
