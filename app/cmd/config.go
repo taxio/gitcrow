@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/taxio/gitcrow/pkg"
 )
 
-func NewConfigCmd(ctx *pkg.AppContext) *cobra.Command {
+func NewConfigCmd() *cobra.Command {
 	configCmd := &cobra.Command{
 		Use:   "config",
 		Short: "show config",

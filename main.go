@@ -3,11 +3,10 @@ package main
 import (
 	"os"
 
+	"github.com/taxio/gitcrow/app"
+
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/spf13/afero"
-	"github.com/taxio/gitcrow/cmd"
 	"github.com/taxio/gitcrow/log"
-	"github.com/taxio/gitcrow/pkg"
 )
 
 const (
@@ -16,15 +15,21 @@ const (
 )
 
 func main() {
-	appCtx := &pkg.AppContext{
-		Name:    name,
-		Version: version,
-		Fs:      afero.NewOsFs(),
-		Out:     os.Stdout,
-	}
-
-	cli := cmd.NewRootCmd(appCtx)
-	if err := cli.Execute(); err != nil {
+	//appCtx := &pkg.AppContext{
+	//	Name:    name,
+	//	Version: version,
+	//	Fs:      afero.NewOsFs(),
+	//	Out:     os.Stdout,
+	//}
+	//
+	//cli := cmd.NewRootCmd(appCtx)
+	//if err := cli.Execute(); err != nil {
+	//	log.L().Error(err)
+	//	os.Exit(1)
+	//}
+	//os.Exit(0)
+	err := app.Run()
+	if err != nil {
 		log.L().Error(err)
 		os.Exit(1)
 	}

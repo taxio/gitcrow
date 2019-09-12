@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"errors"
+	"os"
 
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/pkg"
 )
 
-func NewCloneCmd(ctx *pkg.AppContext) *cobra.Command {
+func NewCloneCmd() *cobra.Command {
 	cloneCmd := &cobra.Command{
 		Use:   "clone",
 		Short: "clone repositories",
@@ -17,8 +19,13 @@ func NewCloneCmd(ctx *pkg.AppContext) *cobra.Command {
 				return errors.New("argument incorrect")
 			}
 			repoPath := args[0]
+			projPath, err := os.Getwd()
+			if err != nil {
+				return err
+			}
 
-			err := pkg.CloneRepo(ctx.Fs, repoPath, "")
+			fs := afero.NewOsFs()
+			err = pkg.CloneRepo(fs, repoPath, projPath)
 			if err != nil {
 				return err
 			}

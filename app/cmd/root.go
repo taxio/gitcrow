@@ -1,14 +1,16 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/log"
 	"github.com/taxio/gitcrow/pkg"
 )
 
-func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
+func NewRootCmd(name, version string, subCmds []*cobra.Command) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "gitcrow",
+		Use:   name,
 		Short: "a tool for cloning git repositories",
 		Long:  "a tool for cloning git repositories",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -17,7 +19,7 @@ func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
 				return err
 			}
 			if v {
-				pkg.PrintVersion(ctx.Out, ctx.Version)
+				pkg.PrintVersion(os.Stdout, version)
 				return nil
 			}
 			return nil
@@ -38,13 +40,7 @@ func NewRootCmd(ctx *pkg.AppContext) *cobra.Command {
 	rootCmd.Flags().BoolP("version", "v", false, "print version")
 	rootCmd.PersistentFlags().Bool("verbose", false, "print log for developer")
 
-	// sub commands
-	subCmds := []*cobra.Command{
-		NewInitCmd(ctx),
-		NewCloneCmd(ctx),
-		NewDownloadCmd(ctx),
-		NewConfigCmd(ctx),
-	}
+	// apply sub commands
 	rootCmd.AddCommand(subCmds...)
 
 	return rootCmd

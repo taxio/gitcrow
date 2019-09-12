@@ -3,12 +3,13 @@ package pkg
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
-
-	"github.com/taxio/gitcrow/log"
+	"github.com/taxio/gitcrow/db"
 )
 
 type Repo struct {
@@ -26,19 +27,29 @@ func (r *Repo) GetLink() (string, error) {
 }
 
 func CloneRepo(fs afero.Fs, repoPath, projBasePath string) error {
-	err := validateRepoPath(repoPath)
+	projPath, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	repo, err := convertPathToRepo(repoPath)
+	dbPath := filepath.Join(projPath, ".gitcrow", "db.sqlite3")
+	r := db.NewRecordStore(dbPath)
+	err = r.Add("github.com", "taxio", "gitcrow")
 	if err != nil {
 		return err
 	}
-	link, err := repo.GetLink()
-	if err != nil {
-		return err
-	}
-	log.L().Printfln("clone %s", link)
+	//err := validateRepoPath(repoPath)
+	//if err != nil {
+	//	return err
+	//}
+	//repo, err := convertPathToRepo(repoPath)
+	//if err != nil {
+	//	return err
+	//}
+	//link, err := repo.GetLink()
+	//if err != nil {
+	//	return err
+	//}
+	//log.L().Printfln("clone %s", link)
 	return nil
 }
 
