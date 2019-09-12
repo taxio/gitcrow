@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -8,8 +9,6 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/taxio/gitcrow/log"
-
-	"golang.org/x/xerrors"
 )
 
 type Repo struct {
@@ -20,7 +19,7 @@ type Repo struct {
 
 func (r *Repo) GetLink() (string, error) {
 	if len(r.Host) == 0 || len(r.Owner) == 0 || len(r.Name) == 0 {
-		return "", xerrors.New("incorrect repo info")
+		return "", errors.New("incorrect repo info")
 	}
 	link := fmt.Sprintf("https://%s/%s/%s", r.Host, r.Owner, r.Name)
 	return link, nil
@@ -45,7 +44,7 @@ func CloneRepo(fs afero.Fs, repoPath, projBasePath string) error {
 
 func validateRepoPath(path string) error {
 	if len(path) == 0 {
-		return xerrors.New("incorrect path")
+		return errors.New("incorrect path")
 	}
 	return nil
 }

@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/pkg"
-	"golang.org/x/xerrors"
 )
 
 func NewInitCmd(ctx *pkg.AppContext) *cobra.Command {
@@ -16,11 +16,11 @@ func NewInitCmd(ctx *pkg.AppContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			wd, err := os.Getwd()
 			if err != nil {
-				return xerrors.Errorf(": %w", err)
+				return fmt.Errorf(": %w", err)
 			}
 			err = pkg.InitProject(ctx, wd)
 			if err != nil {
-				return xerrors.Errorf(": %w", err)
+				return fmt.Errorf(": %w", err)
 			}
 			return nil
 		},
