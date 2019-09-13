@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/taxio/gitcrow/app"
-
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/taxio/gitcrow/log"
 )

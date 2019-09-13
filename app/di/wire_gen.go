@@ -8,8 +8,15 @@ package di
 // Injectors from wire.go:
 
 func NewApp() (*App, error) {
-	appContext := provideAppContext()
-	v := provideSubCmds(appContext)
+	appContext, err := provideAppContext()
+	if err != nil {
+		return nil, err
+	}
+	recordStore, err := provideRecordStore(appContext)
+	if err != nil {
+		return nil, err
+	}
+	v := provideSubCmds(appContext, recordStore)
 	command := provideRootCmd(appContext, v)
 	app := &App{
 		Cmd: command,

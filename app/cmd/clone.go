@@ -7,9 +7,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/taxio/gitcrow/pkg"
+	"github.com/taxio/gitcrow/pkg/record"
 )
 
-func NewCloneCmd() *cobra.Command {
+func NewCloneCmd(r *record.RecordStore) *cobra.Command {
 	cloneCmd := &cobra.Command{
 		Use:   "clone",
 		Short: "clone repositories",
